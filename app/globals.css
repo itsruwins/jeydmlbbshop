@@ -1,26 +1,457 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   Design tokens — see DESIGN.md
+   Near-black and one warm accent. Light is the default surface because the
+   admin is used at a desk, in a lit room, reading dense numeric data.
+   ========================================================================== */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* Surfaces. True neutral, deliberately not a warm cream. */
+  --bg: oklch(0.985 0 0);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.965 0 0);
+  --surface-3: oklch(0.94 0 0);
+
+  --border: oklch(0.905 0 0);
+  --border-strong: oklch(0.82 0 0);
+
+  /* Translucent chrome: the page scrolls underneath rather than being clipped
+     by an opaque bar. Falls back to solid under prefers-reduced-transparency. */
+  --surface-translucent: oklch(1 0 0 / 0.72);
+
+  /* Ink. --ink-3 is pinned at 0.50, not 0.55: placeholders must clear 4.5:1. */
+  --ink: oklch(0.18 0 0);
+  --ink-2: oklch(0.42 0 0);
+  --ink-3: oklch(0.5 0 0);
+  --ink-inverse: oklch(0.99 0 0);
+
+  /* Primary action is near-black, not amber. */
+  --primary: oklch(0.2 0 0);
+  --primary-hover: oklch(0.3 0 0);
+  --on-primary: oklch(0.99 0 0);
+
+  /* Amber means "interactive": focus, selection, current nav, featured. */
+  --accent: oklch(0.66 0.15 66);
+  --accent-hover: oklch(0.6 0.15 64);
+  --accent-ink: oklch(0.47 0.12 58);
+  --accent-soft: oklch(0.96 0.03 75);
+  --accent-border: oklch(0.88 0.07 72);
+  --on-accent: oklch(0.18 0.02 60);
+
+  /* Status. A separate family from the accent, one hue each. */
+  --status-available-ink: oklch(0.44 0.11 150);
+  --status-available-bg: oklch(0.955 0.03 150);
+  --status-available-border: oklch(0.87 0.06 150);
+
+  --status-reserved-ink: oklch(0.48 0.12 55);
+  --status-reserved-bg: oklch(0.96 0.035 60);
+  --status-reserved-border: oklch(0.88 0.07 58);
+
+  --status-sold-ink: oklch(0.45 0 0);
+  --status-sold-bg: oklch(0.95 0 0);
+  --status-sold-border: oklch(0.87 0 0);
+
+  --status-hidden-ink: oklch(0.46 0.04 250);
+  --status-hidden-bg: oklch(0.96 0.012 250);
+  --status-hidden-border: oklch(0.83 0.03 250);
+
+  /* Two roles, deliberately separate. --danger is a fill and needs white to
+     sit on it; --danger-ink is text on a light surface. One value cannot be
+     both without failing contrast at one end or the other. */
+  --danger: oklch(0.52 0.19 27);
+  --danger-hover: oklch(0.46 0.19 27);
+  --danger-ink: oklch(0.5 0.19 27);
+  --danger-bg: oklch(0.96 0.025 27);
+  --danger-border: oklch(0.87 0.06 27);
+  --on-danger: oklch(0.99 0 0);
+
+  --success-ink: oklch(0.44 0.11 150);
+
+  /* Type scale. Fixed rem, ratio ~1.15. Tracking is size-specific. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Shadows exist only for layers that genuinely float. */
+  /* The dim behind a modal, sheet or drawer. Was a literal `black/45` copied
+     into three components before it was a token. */
+  --scrim: oklch(0 0 0 / 0.45);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-pop: 0 8px 24px -8px oklch(0 0 0 / 0.18), 0 2px 6px -2px oklch(0 0 0 / 0.08);
+  --shadow-dialog: 0 24px 60px -12px oklch(0 0 0 / 0.28), 0 4px 12px -4px oklch(0 0 0 / 0.1);
+
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 240ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Semantic z-index. Never an arbitrary 9999. */
+  --z-sticky: 10;
+  --z-drawer-backdrop: 20;
+  --z-drawer: 30;
+  --z-dropdown: 40;
+  --z-dialog-backdrop: 50;
+  --z-dialog: 60;
+  --z-toast: 70;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: oklch(0.17 0 0);
+    --surface: oklch(0.21 0 0);
+    /* Sidebars recede in dark mode rather than float. */
+    --surface-2: oklch(0.145 0 0);
+    --surface-3: oklch(0.26 0 0);
+
+    --border: oklch(0.3 0 0);
+    --border-strong: oklch(0.42 0 0);
+
+    --surface-translucent: oklch(0.17 0 0 / 0.72);
+
+    --ink: oklch(0.96 0 0);
+    --ink-2: oklch(0.76 0 0);
+    --ink-3: oklch(0.66 0 0);
+    --ink-inverse: oklch(0.17 0 0);
+
+    /* Inverted: a near-black button on a near-black page is invisible. */
+    --primary: oklch(0.95 0 0);
+    --primary-hover: oklch(0.86 0 0);
+    --on-primary: oklch(0.17 0 0);
+
+    --accent: oklch(0.74 0.14 72);
+    --accent-hover: oklch(0.8 0.14 74);
+    --accent-ink: oklch(0.8 0.13 75);
+    --accent-soft: oklch(0.28 0.05 68);
+    --accent-border: oklch(0.4 0.08 70);
+    --on-accent: oklch(0.18 0.02 60);
+
+    --status-available-ink: oklch(0.82 0.14 150);
+    --status-available-bg: oklch(0.28 0.05 150);
+    --status-available-border: oklch(0.4 0.07 150);
+
+    --status-reserved-ink: oklch(0.84 0.13 62);
+    --status-reserved-bg: oklch(0.29 0.05 58);
+    --status-reserved-border: oklch(0.42 0.08 58);
+
+    --status-sold-ink: oklch(0.72 0 0);
+    --status-sold-bg: oklch(0.27 0 0);
+    --status-sold-border: oklch(0.38 0 0);
+
+    --status-hidden-ink: oklch(0.78 0.05 250);
+    --status-hidden-bg: oklch(0.26 0.03 250);
+    --status-hidden-border: oklch(0.4 0.05 250);
+
+    /* The fill stays dark enough for white to clear 4.5:1 on it; the ink is
+       lifted far enough to clear 4.5:1 on both the surface and the tinted
+       danger background. */
+    --danger: oklch(0.55 0.19 27);
+    --danger-hover: oklch(0.58 0.19 27);
+    --danger-ink: oklch(0.72 0.17 27);
+    --danger-bg: oklch(0.28 0.07 27);
+    --danger-border: oklch(0.42 0.11 27);
+    --on-danger: oklch(0.99 0 0);
+
+    --success-ink: oklch(0.82 0.14 150);
+
+    /* Heavier in dark mode: a 45% scrim over a near-black page barely reads
+       as a separation at all. */
+    --scrim: oklch(0 0 0 / 0.6);
+
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+    --shadow-pop: 0 8px 24px -8px oklch(0 0 0 / 0.6), 0 2px 6px -2px oklch(0 0 0 / 0.4);
+    --shadow-dialog: 0 24px 60px -12px oklch(0 0 0 / 0.7), 0 4px 12px -4px oklch(0 0 0 / 0.5);
   }
 }
 
+/* Expose tokens to Tailwind utilities (bg-surface, text-ink-2, rounded-lg…). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-surface-translucent: var(--surface-translucent);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-ink: var(--danger-ink);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-on-danger: var(--on-danger);
+  --color-success-ink: var(--success-ink);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: var(--radius-sm);
+  --radius-DEFAULT: var(--radius);
+  --radius-lg: var(--radius-lg);
+
+  --ease-out-quart: var(--ease-out);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  /* The font family comes from the Geist variable set on <html>. It is not
+     restated here — an Arial fallback declared at this level would silently
+     win over the loaded face. */
+  font-size: var(--text-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Size-specific tracking: small text opens up, large text tightens. */
+h1,
+h2,
+h3,
+h4 {
+  color: var(--ink);
+  text-wrap: balance;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: var(--text-2xl);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: var(--text-lg);
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* One focus treatment across the whole app. Never removed without a
+   replacement — an invisible focus ring makes the app unusable by keyboard. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::placeholder {
+  color: var(--ink-3);
+  opacity: 1; /* Firefox dims placeholders by default, breaking the contrast. */
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Expands a control's tap area to the 44px minimum without changing its
+   size on screen.
+   
+   Small icon buttons — reorder, delete, feature — read best at 32px, but 32px
+   is well under what a thumb reliably hits. The pseudo-element grows the
+   target outward from the centre, so the button still looks 32px and still
+   sits on the same grid, while the area that responds to a tap is 44px. */
+.hit-target {
+  position: relative;
+}
+
+.hit-target::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* Any column of figures must align. Proportional digits make a price list
+   impossible to scan. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible to screen readers, not to the eye. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Motion
+   ========================================================================== */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeletons are shaped like the content they stand in for. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-3) 25%,
+    var(--surface-2) 37%,
+    var(--surface-3) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Translucency is a preference, not a requirement. When it is turned down the
+   surface becomes solid and the blur is dropped entirely — a half-transparent
+   bar with no blur is less legible than either. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --surface-translucent: oklch(1 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-translucent: oklch(0.17 0 0);
+    }
+  }
+
+  .backdrop-blur-xl {
+    backdrop-filter: none !important;
+  }
+}
+
+/* Reduced motion is a gentler equivalent, not the absence of feedback:
+   cross-fades survive, transforms and loops do not. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none;
+    background: var(--surface-3);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* The filter sheet arrives from the bottom edge and leaves the same way, so
+   the panel keeps one consistent home. */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
