@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AccountGrid } from "@/components/accounts/AccountGrid";
 import { FeaturedListing } from "@/components/home/FeaturedListing";
 import { VouchCard, VouchWall } from "@/components/home/VouchWall";
-import { VOUCHES } from "@/components/home/vouches";
+import { HERO_VOUCH_IDS, VOUCHES } from "@/components/home/vouches";
 import { ContactButton } from "@/components/shared/ContactButton";
 import { Button } from "@/components/ui/Button";
 import { getPublicAccounts } from "@/functions/accounts/getPublicAccounts";
@@ -35,12 +35,19 @@ export const metadata: Metadata = {
 };
 
 /**
- * How many pieces of feedback stand in the hero.
+ * The feedback that stands in the hero, and the rest.
  *
- * Two, because the hero has to be readable in one glance and a third quote
- * turns it into a page to read. The rest go to the wall further down.
+ * Chosen by id in `vouches.ts` rather than by taking the first few, so
+ * reordering the wall cannot silently change which comments carry the top of
+ * the page. Whatever is not in the hero falls through to the wall, so no vouch
+ * can be dropped by accident either.
  */
-const HERO_VOUCHES = 2;
+const HERO_VOUCHES = VOUCHES.filter((vouch) =>
+  (HERO_VOUCH_IDS as readonly string[]).includes(vouch.id),
+);
+const WALL_VOUCHES = VOUCHES.filter(
+  (vouch) => !(HERO_VOUCH_IDS as readonly string[]).includes(vouch.id),
+);
 
 /**
  * The claims that are not the sold count.
@@ -86,9 +93,6 @@ export default async function HomePage() {
     ? catalogue.available.filter((account) => account.id !== lead.id)
     : [];
 
-  const heroVouches = VOUCHES.slice(0, HERO_VOUCHES);
-  const wallVouches = VOUCHES.slice(HERO_VOUCHES);
-
   const primarySocial = socials[0];
   const socialName =
     primarySocial?.label?.trim() || primarySocial?.platform?.trim() || "";
@@ -123,10 +127,16 @@ export default async function HomePage() {
                   inside the headline rather than becoming a subtitle under it —
                   but a step down in size. Set at the same scale it ran four
                   lines deep and pushed the quotes, which are the actual proof,
-                  below the fold on a laptop. */}
-              <span className="mt-2 block text-[length:var(--display-2)] text-accent-display">
-                Here is what they said.
-              </span>
+                  below the fold on a laptop.
+
+                  It only appears when there is feedback to point at. "Here is
+                  what they said", followed by nothing, is worse than not making
+                  the claim: it reads as a page with its content missing. */}
+              {HERO_VOUCHES.length > 0 && (
+                <span className="mt-2 block text-[length:var(--display-2)] text-accent-display">
+                  Here is what they said.
+                </span>
+              )}
             </h1>
 
             <p
@@ -139,13 +149,13 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {heroVouches.length > 0 && (
+          {HERO_VOUCHES.length > 0 && (
             <ul
-              className="rise mt-10 grid gap-4 sm:grid-cols-2 lg:max-w-4xl"
+              className="rise mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
               style={{ animationDelay: "160ms" }}
             >
-              {heroVouches.map((vouch) => (
-                <li key={`${vouch.name}-${vouch.date}`} className="flex">
+              {HERO_VOUCHES.map((vouch) => (
+                <li key={vouch.id} className="flex">
                   <VouchCard vouch={vouch} className="w-full" />
                 </li>
               ))}
@@ -308,7 +318,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <VouchWall vouches={wallVouches} />
+      <VouchWall vouches={WALL_VOUCHES} />
 
       {/* ── Selling ────────────────────────────────────────────────────────
           The one place the deep oxblood is used as a full field rather than as

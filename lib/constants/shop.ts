@@ -36,4 +36,14 @@ export const SHOP = {
    * too — a missed promise on a landing page costs more trust than it buys.
    */
   replyTime: "within the hour",
+
+  /**
+   * The Facebook post whose comments are the vouches.
+   *
+   * Linked from the vouch wall so a sceptical buyer can check the comments at
+   * the source rather than taking the site's word for them. Worth knowing: the
+   * post is on a personal profile, so anyone not logged into Facebook hits a
+   * login wall rather than the comments.
+   */
+  vouchPostUrl: "https://www.facebook.com/share/p/1HAczZHcio/",
 } as const;

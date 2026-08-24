@@ -1,76 +1,132 @@
 /**
- * ⚠️  PLACEHOLDER FEEDBACK — NOT REAL. REPLACE BEFORE LAUNCH.
+ * Buyer feedback, transcribed from the comments on the shop's Facebook post.
  *
- * Every entry below is invented. They exist so the vouch section can be
- * designed and reviewed with realistic content in it, and for no other reason.
+ * ## These are real. Do not add anything that is not.
  *
- * Publishing invented buyer feedback on a shop whose entire proposition is
- * "you can trust us with money off-platform" is the exact thing that makes a
- * shop look like a scam when someone notices. It is also, in most markets,
- * illegal advertising. So:
+ * Every entry below was copied from a screenshot of the actual comment, kept in
+ * `Vouches/` outside this repository. The names are the commenters' own
+ * Facebook display names, used with their permission. The words are exactly as
+ * they were written — the shouting, the Taglish, the emoji and the spelling are
+ * all theirs, and tidying them is what would make them stop reading as real.
  *
- *   • Before this page goes live, replace these with real feedback from the
- *     Facebook page — the buyer's words, their name as they wrote it, and the
- *     date of the actual post or message.
- *   • Ask each buyer before quoting them by name. `name` may be shortened
- *     ("Mark D.") if they prefer.
- *   • If there is no real feedback yet, empty this array. The section removes
- *     itself when it is empty, and a landing page with no vouch wall is far
- *     better than one with a fabricated one.
+ * Inventing an entry here, or embellishing one, would do more damage than
+ * having no feedback at all: this shop's entire proposition is that money moves
+ * off-platform on the strength of what the site shows.
  *
- * A visible warning renders on this section in development so this cannot be
- * forgotten by accident. It does not render in production — the safeguard is
- * this file, not the banner.
+ * ## Why a file and not a table
+ *
+ * There is no automated way in. Facebook's Graph API exposes comments only for
+ * Pages you administer through a reviewed app; this shop runs on a personal
+ * profile, which has none, and every logged-out request for the post — browser,
+ * `curl`, mbasic — returns a login wall. So each of these is transcribed by
+ * hand anyway, and a database bought nothing that a reviewed, version-tracked
+ * file does not.
+ *
+ * ## Adding one
+ *
+ * 1. Screenshot the comment and the person's profile picture.
+ * 2. Crop the picture square and drop it in `public/vouches/` as `<n>.jpg`.
+ * 3. Add an entry below. `posted` is the relative time Facebook showed at the
+ *    moment of the screenshot — see the note on that field.
  */
 export type Vouch = {
-  /** The buyer's name, exactly as they wrote it. */
+  /** Stable key. Matches the source screenshot in `Vouches/`. */
+  id: string;
+  /** Their Facebook display name, exactly as it appears on the comment. */
   name: string;
-  /** ISO date of the real post or message, for `<time datetime>`. */
-  date: string;
-  /** Their words. Not tidied up, not lengthened, not written for them. */
+  /** Their words, unedited. */
   quote: string;
-  /** What they bought, when it is theirs to say. */
-  bought?: string;
+  /**
+   * The relative age Facebook displayed when the screenshot was taken — "6d",
+   * "12w". Frozen at that moment and deliberately so: the alternative was
+   * converting it to a date, which would state a precision the source does not
+   * have. It does mean a comment labelled "6d" stays labelled "6d" forever, so
+   * these are worth re-checking if the wall is ever rebuilt.
+   */
+  posted: string;
+  /** File in `public/vouches/`. */
+  avatar: string;
 };
 
-/** @see the file header — placeholder content, replace before launch. */
+/**
+ * Order matters: this is the order they appear on the wall.
+ *
+ * The three the homepage hero uses are chosen in `app/(public)/page.tsx` by id,
+ * not by position, so reordering this list cannot silently change the hero.
+ */
 export const VOUCHES: Vouch[] = [
   {
-    name: "Marvin R.",
-    date: "2026-07-14",
-    quote:
-      "Legit. Sent the screenshots first, answered all my questions about the binding, then we did the handover on call. Smooth.",
-    bought: "Mythic account",
+    id: "1",
+    name: "Dutch Diamond",
+    quote: "SUPER LEGIT! THANK U SO MUCH JADE❤️ 'til our next transact.",
+    posted: "6d",
+    avatar: "/vouches/1.jpg",
   },
   {
-    name: "Aira B.",
-    date: "2026-06-29",
+    id: "2",
+    name: "June Rey R. Magno",
     quote:
-      "Replied in like 10 minutes on a Sunday night. That alone made me trust it more than the other sellers I messaged.",
+      "Solid legit to, babalik ako after 5 days para sa clean na clean Mr. Clean ahhahahaha",
+    posted: "5d",
+    avatar: "/vouches/2.jpg",
   },
   {
-    name: "Kim P.",
-    date: "2026-06-02",
+    id: "3",
+    name: "Bermon Sanreb",
     quote:
-      "Everything in the listing matched what I got — skin count, collection level, even the server. No surprises after paying.",
-    bought: "Collector account",
+      "Thank you  NICE DEAL 👌 highly recommended to all who wanted to buy a ML account kindly pm this person.",
+    posted: "12w",
+    avatar: "/vouches/3.jpg",
   },
   {
-    name: "JM Santos",
-    date: "2026-05-18",
-    quote:
-      "Was scared to buy an account online after getting scammed before. He let me check the profile screenshots as long as I wanted before I sent anything.",
+    id: "4",
+    name: "Angelina Gabriela",
+    quote: "Fast transact, will prolly buy again! 🤝",
+    posted: "12w",
+    avatar: "/vouches/4.jpg",
   },
   {
-    name: "Nico V.",
-    date: "2026-04-27",
-    quote: "Second account I bought here. Same process, same speed. Recommended.",
+    // The original tags Jade's profile mid-sentence. The tag is dropped and the
+    // words around it kept: a mention is a link, not something they said, and
+    // rendering it inline read as the name written twice.
+    id: "5",
+    name: "Julius Tuvera",
+    quote:
+      "Hello guys super satisfied with kuya jade SUPER LEGIT AT MABILIS.. SALAMAT PO NG MARAMI KUYA JADE ❤️❤️❤️",
+    posted: "12w",
+    avatar: "/vouches/5.jpg",
   },
   {
-    name: "Denise L.",
-    date: "2026-03-30",
+    id: "6",
+    name: "RA LD",
     quote:
-      "Fair price for the skins on it. Explained how the email change works step by step, did not rush me at all.",
-    bought: "Mythical Glory account",
+      "guys legit to promise wag na kayung mag dalawang isip bumili kung kaya niyo guys",
+    posted: "20w",
+    avatar: "/vouches/6.jpg",
+  },
+  {
+    id: "7",
+    name: "Matthew Vizcarra",
+    quote:
+      "Up Legit to guys solid 🔥🔥 Dito ulit ako bibili 💯% guys solid sobrang bilis kausap at sobrang bait ni bossing 👌👌👌 sulit pera niyo dito guys",
+    posted: "20w",
+    avatar: "/vouches/7.jpg",
+  },
+  {
+    id: "8",
+    name: "Iyan Jeff Macrohon Ortiz",
+    quote: "Clean transaction. Will recommend.",
+    posted: "20w",
+    avatar: "/vouches/8.jpg",
   },
 ];
+
+/**
+ * The three that stand in the hero, named by id.
+ *
+ * Chosen for what they answer rather than for how warm they are:
+ *   1 — a repeat customer, in as many words
+ *   3 — recommends the shop to strangers, and does it in English
+ *   6 — "wag na kayung mag dalawang isip": speaks to the hesitation itself
+ */
+export const HERO_VOUCH_IDS = ["1", "3", "6"] as const;
