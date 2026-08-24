@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button } from "@/components/ui/Button";
+import { SHOP } from "@/lib/constants/shop";
 import { logoutAdmin } from "@/functions/auth/logoutAdmin";
 
 import { AdminNav } from "./AdminNav";
@@ -65,9 +67,9 @@ export function AdminShell({
       <header className="sticky top-0 z-[var(--z-sticky)] flex h-14 items-center justify-between gap-2 border-b border-[var(--border)] bg-surface-2 px-3 lg:hidden">
         <Link
           href="/admin/dashboard"
-          className="font-semibold tracking-[-0.005em] text-ink"
+          className="wordmark text-[length:var(--text-md)] text-ink"
         >
-          MLBB Shop
+          {SHOP.name}
         </Link>
         <Button
           size="sm"
@@ -95,7 +97,10 @@ export function AdminShell({
             aria-label="Admin sections"
             className="fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-64 flex-col border-r border-[var(--border)] bg-surface-2 motion-safe:animate-[slide-in-left_var(--dur)_var(--ease-out)] lg:hidden"
           >
-            <SidebarBody email={email} onNavigate={() => setDrawerOpen(false)} />
+            <SidebarBody
+              email={email}
+              onNavigate={() => setDrawerOpen(false)}
+            />
           </div>
         </>
       )}
@@ -123,9 +128,9 @@ function SidebarBody({
         <Link
           href="/admin/dashboard"
           onClick={onNavigate}
-          className="font-semibold tracking-[-0.005em] text-ink"
+          className="wordmark text-[length:var(--text-md)] text-ink"
         >
-          MLBB Shop
+          {SHOP.name}
         </Link>
       </div>
 
@@ -134,6 +139,16 @@ function SidebarBody({
       </div>
 
       <div className="shrink-0 border-t border-[var(--border)] p-3">
+        {/* The theme control belongs here as much as on the storefront. The
+            site now opens dark for everyone, and this is the one screen the
+            palette was NOT chosen for: DESIGN.md picked light as the admin's
+            default precisely because a dense price table is read for twenty
+            minutes at a desk. Without this the operator has no way back to it. */}
+        <div className="mb-3 flex items-center justify-between gap-2 px-1">
+          <span className="text-[length:var(--text-sm)] text-ink-3">Theme</span>
+          <ThemeToggle />
+        </div>
+
         {email && (
           <p
             className="mb-2 truncate px-1 text-[length:var(--text-sm)] text-ink-3"
@@ -143,7 +158,12 @@ function SidebarBody({
           </p>
         )}
         <form action={logoutAdmin}>
-          <Button type="submit" variant="ghost" size="sm" className="w-full justify-start">
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+          >
             Sign out
           </Button>
         </form>

@@ -44,9 +44,10 @@ export async function updateAccount(
 
   // Listed field by field rather than spread-minus-one, so what an edit is
   // allowed to touch is readable at a glance. account_reference is absent by
-  // design — see above. `title` is absent too: the form no longer collects one,
-  // and omitting the column rather than writing null means an edit does not
-  // silently erase the titles listings created before it was dropped.
+  // design — see above. `description` and `account_level` are absent because
+  // the form no longer collects them, and omitting a column rather than
+  // writing null means an edit cannot silently erase a value entered before
+  // the field was removed.
   const { error } = await supabase
     .from("accounts")
     .update({
@@ -54,10 +55,8 @@ export async function updateAccount(
       rank_id: parsed.data.rank_id,
       collection_level_id: parsed.data.collection_level_id,
       server: parsed.data.server,
-      account_level: parsed.data.account_level,
       hero_count: parsed.data.hero_count,
       skin_count: parsed.data.skin_count,
-      description: parsed.data.description,
       status: parsed.data.status,
       // Only an available listing can be featured. Enforced here as well as in
       // updateAccountStatus, because the form can change the status too and the

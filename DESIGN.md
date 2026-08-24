@@ -5,85 +5,111 @@ Phases 5–8 inherit it.
 
 ## Direction
 
-**Near-black and one warm accent.** Almost monochrome, with a single burnt-amber
-accent spent sparingly. The interface should read the way a well-made tool
-reads: quiet, dense where density helps, and completely unambiguous about what
-is clickable.
+**Black and deep oxblood.** Almost monochrome, with a single dark red carrying
+the brand. The interface should read the way a well-made tool reads: quiet,
+dense where density helps, and completely unambiguous about what is clickable.
 
-The scene that decided the theme: *one operator at a desk, in a lit room,
-entering structured data for twenty minutes at a stretch, needing to read prices
-and statuses at a glance.* That forces **light as the default surface**, with a
-dark counterpart for preference. A dark "gaming" dashboard would have been the
-category reflex, and it would have made a dense price table harder to read, not
-easier.
+**Dark is the default, not the alternative.** The storefront is composed on a
+black ground — the token block on `:root` is the dark one, and light is opt-in
+through `[data-theme="light"]`. A visitor who has expressed no preference sees
+the design as it was composed.
 
-Colour strategy: **Restrained** — the product register's floor. Tinted neutrals
-plus one accent under 10% of surface area.
+That is a reversal of the original decision, which made light the default for
+the admin operator reading dense numeric data at a desk. The reasoning still
+holds for the admin, which is why the theme control appears in the admin
+sidebar as well as the public header: the operator can put their own screen
+back into light and it is remembered per device.
+
+The neutrals are not grey. Every one carries a trace of the brand hue (chroma
+~0.012 at hue 20), so the interface reads as one material rather than a grey
+box with red parts attached.
+
+Colour strategy: **Restrained** — tinted neutrals plus one brand colour, spent
+deliberately. The oxblood covers a full field exactly once per page.
 
 ## The accent rule
 
 This one is easy to get wrong, so it is a rule rather than a guideline:
 
-- **Amber means "interactive".** Focus rings, current nav item, selected row,
+- **Oxblood means "interactive".** Focus rings, current nav item, selected row,
   drag handles, the featured star, progress fills.
-- **Amber never means "status".** Status badges are their own semantic family
+- **Oxblood never means "status".** Status badges are their own semantic family
   with their own hues (below).
-- **Primary buttons are near-black, not amber.** Near-black is the strongest
-  thing on the page; reserving amber for state keeps both legible.
+- **Primary buttons are near-black** (near-white in dark), not oxblood.
+  Near-black is the strongest thing on the page; reserving the brand colour for
+  state keeps both legible.
+
+### The four accent roles are not interchangeable
+
+The brand colour cannot be one value. A red dark enough to read as oxblood is
+invisible as a focus ring on black; a red light enough to signal on black reads
+as salmon. So it is four tokens:
+
+| Token | Role | Constraint |
+| --- | --- | --- |
+| `--accent-fill` | Large filled areas: bands, plates | Never carries state |
+| `--accent` | Interactive state, focus rings | ≥3:1 on the adjacent surface |
+| `--accent-ink` | Text and icons | ≥4.5:1 on every surface it lands on |
+| `--accent-display` | Headings ≥24px **only** | ≥3:1 — fails as body text |
+| `--accent-soft` | Tinted ground | Pairs with `--accent-ink` |
+
+`--accent-display` is the deepest of them. It exists because WCAG asks 3:1 of
+large text rather than 4.5:1, and that extra room is the last step from crimson
+down to oxblood. Using it below 24px is a contrast failure.
+
+### Danger versus the brand
+
+The brand colour is now itself a red, so danger has to be told apart by
+something other than hue. It is pushed to hue 32 and kept **lit and saturated**;
+the oxblood is dark and muted and never appears on a destructive control. If the
+accent is ever brightened, this separation is the first thing that breaks.
 
 ## Tokens
 
-All colour in OKLCH. Defined in `app/globals.css` on `:root`, redefined under
-`@media (prefers-color-scheme: dark)`.
+All colour in OKLCH. Defined in `app/globals.css`: the dark set on `:root`, the
+light set on `:root[data-theme="light"]`.
 
-### Light
+The values are not duplicated here — a token table in a document drifts out of
+step with the stylesheet the moment either is edited, and then it is worse than
+no table at all. `globals.css` is the source of truth and is commented at each
+decision. What this file records is the *reasoning* that is not visible from a
+list of values:
 
-| Token | Value | Role |
-| --- | --- | --- |
-| `--bg` | `oklch(0.985 0 0)` | Page. True neutral — deliberately **not** cream/sand |
-| `--surface` | `oklch(1 0 0)` | Cards, panels, table body |
-| `--surface-2` | `oklch(0.965 0 0)` | Sidebar, toolbars, table header |
-| `--surface-3` | `oklch(0.94 0 0)` | Hover rows, inset wells |
-| `--border` | `oklch(0.905 0 0)` | Hairlines |
-| `--border-strong` | `oklch(0.82 0 0)` | Inputs, focused containers |
-| `--ink` | `oklch(0.18 0 0)` | Primary text |
-| `--ink-2` | `oklch(0.42 0 0)` | Secondary text, labels |
-| `--ink-3` | `oklch(0.50 0 0)` | Muted text **and placeholders** |
-| `--primary` | `oklch(0.20 0 0)` | Primary button fill |
-| `--primary-hover` | `oklch(0.30 0 0)` | |
-| `--on-primary` | `oklch(0.99 0 0)` | Text on primary |
-| `--accent` | `oklch(0.66 0.15 66)` | Interactive indicator fills, focus ring |
-| `--accent-ink` | `oklch(0.47 0.12 58)` | Accent-coloured **text** and icons |
-| `--accent-soft` | `oklch(0.96 0.03 75)` | Accent tinted background |
-| `--on-accent` | `oklch(0.18 0.02 60)` | Text on an accent fill |
-
-`--ink-3` is `0.50`, not the `0.55` that looks nicer in isolation. At `0.55` a
-placeholder lands near 3.9:1 on white and fails. Light-gray body text is the
-single most common reason an interface is hard to read; the ramp is pinned so it
-cannot happen by accident.
-
-**Danger is two tokens, not one.** `--danger` is a fill that white text sits on;
-`--danger-ink` is red text on a light surface. A single value cannot do both —
-whichever end it is tuned for, the other fails. Use `--danger-ink` for text and
-icons, `--danger` for button and indicator fills, `--danger-border` for outlines.
+- **`--ink-3` is pinned**, not tuned by eye. It has to clear 4.5:1 on
+  `--surface-3`, the lightest ground it ever lands on (a hovered row).
+  Light-grey body text is the single most common reason an interface is hard to
+  read; the ramp is pinned so it cannot happen by accident.
+- **`--surface-2` goes darker than `--bg` in dark mode.** Sidebars recede rather
+  than float.
+- **Danger is two tokens, not one.** `--danger` is a fill that white text sits
+  on; `--danger-ink` is red text on a light surface. A single value cannot do
+  both — whichever end it is tuned for, the other fails.
+- **`--on-accent` and `--on-accent-fill` differ.** `--accent` is the lit value
+  and takes near-black text; `--accent-fill` is deep and takes white.
 
 ### Verified contrast
 
-Every foreground/background pair in both themes was computed from these OKLCH
-values and checked against WCAG AA: 4.5:1 for text, 3:1 for the focus ring
-against its adjacent surface. All 40 pairs pass. The tightest are the danger
-button hover in dark (4.57:1) and muted text on a hovered row in dark (4.99:1),
-so those two are the ones to re-check if the neutral ramp is ever adjusted.
+Contrast is checked against the *rendered page* in both themes rather than
+computed from the token values, because what matters is the pair that actually
+ends up on screen — a colour is only legible against the surface it lands on.
+Every text/background pair on the storefront passes WCAG AA in both themes; the
+tightest is small accent-coloured text at 4.73:1, which is the pair to re-check
+first if the neutral ramp is ever adjusted.
 
-### Dark
+## Theme switching
 
-Same roles, inverted. `--primary` becomes near-white (`oklch(0.95 0 0)`) with
-near-black text, because a near-black button on a near-black page is invisible.
-`--accent` lifts to `oklch(0.74 0.14 72)` to hold contrast on a dark ground.
-`--surface-2` goes *darker* than `--bg` in dark mode — sidebars recede rather
-than float. `--ink-3` sits at `0.66` rather than mirroring the light ramp,
-because it has to stay legible on the hovered-row surface, which is the
-lightest thing it ever lands on.
+Three states — Light, Dark, System — stored under `jeyd-theme`. `System` keeps
+following the device while it is selected, so a phone crossing into night mode
+changes the page without a reload.
+
+Two states would have been simpler and is the wrong answer: once someone taps a
+two-way switch there is no way back to "follow my device" without clearing site
+data. `System` is the way back.
+
+`ThemeScript` resolves the theme in a blocking inline script in `<head>`. This
+cannot be done in a React component — by the time one runs, the first frame is
+painted, and a visitor who chose Light would watch the page load black and then
+flip. No stored choice at all resolves to dark.
 
 ### Status colours
 
@@ -105,13 +131,29 @@ Colour is never the only signal: every badge carries its label as text.
 
 ## Typography
 
-**One family** — Geist Sans, already loaded, carries headings, labels, buttons,
-body and data. Geist Mono is used for exactly one thing: the account reference
-code, which is an identifier people copy. No display face anywhere in the UI.
+**Geist Sans** carries labels, buttons, body and data across the whole site.
+Geist Mono is used for exactly one thing: the account reference code, which is
+an identifier people copy.
 
-**Fixed rem scale, not fluid.** Clamp-sized headings do not serve product UI —
-users sit at a consistent viewing distance, and a heading that shrinks inside a
-panel looks broken, not responsive. Ratio ≈ 1.15.
+**Archivo, set expanded (`wdth` 112), carries headings on the buyer-facing
+pages** and the wordmark everywhere. A wide grotesque is the lettering of
+signage and catalogue plates, and the shop is asking a stranger to trust it with
+real money. It contrasts with Geist on an axis Geist does not have — width —
+rather than being a second sans that merely looks slightly different. The admin
+keeps Geist for headings; `.display` is not used under `/admin`.
+
+**Fixed rem scale, not fluid — in the admin.** Clamp-sized headings do not serve
+product UI: users sit at a consistent viewing distance, and a heading that
+shrinks inside a panel looks broken, not responsive. Ratio ≈ 1.15.
+
+**The storefront is fluid.** `--display-1/2/3` are `clamp()`, ratio ~1.3,
+ceiling 4.5rem. A landing page headline is read at arm's length on a phone and
+from further back on a desktop; that is a different problem from a panel title.
+
+The base element rules for `h1`–`h4` live inside `@layer base`, which is not a
+detail. Written unlayered they beat every Tailwind utility regardless of
+specificity, and a heading asking for `--display-1` silently renders at
+`--text-2xl` with nothing in the markup to explain why.
 
 | Token | Size | Line height | Tracking |
 | --- | --- | --- | --- |

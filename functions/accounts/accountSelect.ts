@@ -11,7 +11,6 @@ function build(innerCollection: boolean): string {
   return `
     id,
     account_reference,
-    title,
     price,
     rank_id,
     collection_level_id,

@@ -29,15 +29,14 @@ reject bad input.
 | --- | --- | --- |
 | `id` | `uuid` | Primary key |
 | `account_reference` | `text` | Human-facing code, unique. App generates `J1` style values |
-| `title` | `text` | Legacy. The admin form no longer collects one and no mutation writes the column; existing values are still read and displayed |
 | `price` | `numeric` | Philippine pesos |
 | `rank_id` | `uuid` | → `ranks.id` |
 | `collection_level_id` | `uuid` | → `collection_levels.id` |
 | `server` | `text` | Free text. Holds the in-game ID and server together, e.g. `123456789 (2001)`; surfaced as "ID & Server" |
-| `account_level` | `integer` | |
+| `account_level` | `integer` | Legacy. The admin form no longer collects one and no mutation writes the column |
 | `hero_count` | `integer` | |
 | `skin_count` | `integer` | |
-| `description` | `text` | Plain text. Rendered escaped — never as HTML |
+| `description` | `text` | Legacy. No longer collected or written; the listing page no longer renders it |
 | `status` | `text` | `available` \| `reserved` \| `sold` \| `hidden` |
 | `is_featured` | `boolean` | |
 | `created_at` | `timestamptz` | |
@@ -47,6 +46,9 @@ reject bad input.
 on an unknown value returns `200 []` rather than the `22P02` cast error an enum
 would raise. The four-value vocabulary is therefore enforced in
 `schemas/accountSchema.ts` on the way in.
+
+`title` was **dropped** from the table on 24 Aug 2026, after the admin form
+stopped collecting one. Nothing in the app selects or writes it any more.
 
 Confirmed absent (they belong to the archived design, not this one):
 `reference`, `price_php`, `rank_slug`, `collection_slug`, `published_at`,

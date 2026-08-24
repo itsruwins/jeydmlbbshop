@@ -108,13 +108,14 @@ export async function getPublicAccounts(
 
   const term = search?.trim();
   if (term) {
-    // `,` and `()` are the or() grammar's own separators, so a search
-    // containing them would be read as extra conditions rather than as text.
-    const safe = term.replace(/[,()]/g, " ").trim();
+    // Reference only. This used to search the title and description too, but
+    // neither is collected any more — title no longer exists as a column at
+    // all — so those clauses could only ever match listings created before the
+    // fields were removed. A search that silently works on old rows and not on
+    // new ones is worse than one that is honest about what it matches.
+    const safe = term.trim();
     if (safe) {
-      query = query.or(
-        `account_reference.ilike.%${safe}%,title.ilike.%${safe}%,description.ilike.%${safe}%`,
-      );
+      query = query.ilike("account_reference", `%${safe}%`);
     }
   }
 

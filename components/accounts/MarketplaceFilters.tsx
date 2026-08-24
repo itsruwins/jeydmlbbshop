@@ -132,7 +132,7 @@ export function MarketplaceFilters({
             type="search"
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Search by reference, title or description"
+            placeholder="Search by reference"
             className="pr-9"
           />
           {pending && (

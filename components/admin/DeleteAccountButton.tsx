@@ -22,7 +22,6 @@ import { deleteAccount } from "@/functions/accounts/deleteAccount";
 export function DeleteAccountButton({
   accountId,
   accountReference,
-  title,
   imageCount,
   redirectTo,
   size = "sm",
@@ -31,7 +30,6 @@ export function DeleteAccountButton({
 }: {
   accountId: string;
   accountReference: string;
-  title: string | null;
   imageCount: number;
   redirectTo?: string;
   size?: "sm" | "md";
@@ -91,8 +89,8 @@ export function DeleteAccountButton({
         }}
       >
         <p>
-          <span className="font-medium text-ink">{accountReference}</span>
-          {title ? ` — ${title}` : ""} will be permanently removed
+          <span className="font-medium text-ink">{accountReference}</span>{" "}
+          will be permanently removed
           {imageCount > 0
             ? `, along with ${imageCount} screenshot${imageCount === 1 ? "" : "s"}`
             : ""}

@@ -21,10 +21,11 @@ import type { AccountImage } from "@/types/accountImage";
  */
 export function AccountGallery({
   images,
-  title,
+  label,
 }: {
   images: AccountImage[];
-  title: string;
+  /** What to call this listing in alt text — its reference. */
+  label: string;
 }) {
   const ordered = [...images].sort((a, b) => {
     // Cover first, then gallery order.
@@ -49,7 +50,7 @@ export function AccountGallery({
         <Image
           key={active.id}
           src={imagePublicUrl(active.storage_path)}
-          alt={active.alt_text ?? `${title} — screenshot ${activeIndex + 1}`}
+          alt={active.alt_text ?? `${label} — screenshot ${activeIndex + 1}`}
           fill
           sizes="(max-width: 1024px) 100vw, 60vw"
           priority={activeIndex === 0}

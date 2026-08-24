@@ -18,7 +18,7 @@ export async function generateMetadata({
 
   if (!account) return { title: "Account not found" };
 
-  const name = account.title ?? account.account_reference;
+  const name = account.account_reference;
   const cover =
     account.images.find((image) => image.is_cover) ?? account.images[0];
 
@@ -64,7 +64,6 @@ export default async function AccountDetailPage({
     { label: "Collection level", value: orDash(account.collection_level?.name) },
     { label: "Skins", value: formatCount(account.skin_count) },
     { label: "Heroes", value: formatCount(account.hero_count) },
-    { label: "Account level", value: formatCount(account.account_level) },
     { label: "ID & Server", value: orDash(account.server) },
   ];
 
@@ -82,24 +81,27 @@ export default async function AccountDetailPage({
         <div className="min-w-0">
           <AccountGallery
             images={account.images}
-            title={account.title ?? account.account_reference}
+            label={account.account_reference}
           />
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
           <header className="flex flex-col gap-3">
+            {/* Wrapped so the badge sizes to its label. The header is a column
+                flex container, so a bare badge stretches the full width of it
+                and reads as a banner rather than a chip. */}
             <div className="flex flex-wrap items-center gap-2.5">
               <StatusBadge status={account.status} />
-              <span className="font-mono text-[length:var(--text-sm)] text-ink-3">
-                {account.account_reference}
-              </span>
             </div>
 
-            {account.title && (
-              <h1 className="text-[length:var(--text-xl)] font-semibold leading-snug tracking-[-0.015em] text-ink sm:text-[length:var(--text-2xl)]">
-                {account.title}
-              </h1>
-            )}
+            {/* The reference is the heading now that there is no title. It has
+                to be *a* heading regardless: a listing page whose only <h1> was
+                conditional shipped with no <h1> at all whenever the title was
+                blank, which leaves a screen reader with nothing to announce the
+                page as. */}
+            <h1 className="font-mono text-[length:var(--text-xl)] font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-[length:var(--text-2xl)]">
+              {account.account_reference}
+            </h1>
 
             <p className="tabular text-[length:var(--text-3xl)] font-semibold leading-none tracking-[-0.02em] text-ink">
               {formatPrice(account.price)}
@@ -108,7 +110,6 @@ export default async function AccountDetailPage({
 
           <ContactCTA
             reference={account.account_reference}
-            title={account.title}
             status={account.status}
             socialLinks={socialLinks}
           />
@@ -134,18 +135,6 @@ export default async function AccountDetailPage({
             </dl>
           </section>
 
-          {account.description && (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-[length:var(--text-sm)] font-medium tracking-[0.005em] text-ink-3">
-                Description
-              </h2>
-              {/* Rendered as escaped text, never as HTML. `whitespace-pre-line`
-                  keeps the seller's line breaks without interpreting markup. */}
-              <p className="max-w-[65ch] whitespace-pre-line leading-relaxed text-ink-2">
-                {account.description}
-              </p>
-            </section>
-          )}
         </div>
       </div>
     </div>

@@ -88,7 +88,7 @@ test.describe("security", () => {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      data: { account_reference: "ZZTEST-rls-probe", title: "probe", price: 1 },
+      data: { account_reference: "ZZTEST-rls-probe", price: 1 },
     });
 
     expect(

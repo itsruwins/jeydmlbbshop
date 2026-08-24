@@ -70,7 +70,7 @@ export function AccountCard({
         {cover ? (
           <Image
             src={imagePublicUrl(cover.storage_path)}
-            alt={cover.alt_text ?? `${account.title ?? account.account_reference} screenshot`}
+            alt={cover.alt_text ?? `Account ${account.account_reference} screenshot`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             priority={priority}
@@ -121,12 +121,6 @@ export function AccountCard({
             </p>
           )}
         </div>
-
-        {account.title && (
-          <p className="line-clamp-2 text-[length:var(--text-sm)] leading-snug text-ink-2">
-            {account.title}
-          </p>
-        )}
 
         {/* Metadata, ordered by what a buyer actually compares between two
             listings: skins first (the metric this market quotes), then

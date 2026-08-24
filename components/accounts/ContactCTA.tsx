@@ -22,12 +22,10 @@ import type { SocialLink } from "@/types/socialLink";
  */
 export function ContactCTA({
   reference,
-  title,
   status,
   socialLinks,
 }: {
   reference: string;
-  title: string | null;
   status: AccountStatus;
   socialLinks: SocialLink[];
 }) {
@@ -36,7 +34,7 @@ export function ContactCTA({
   const isAvailable = status === "available";
 
   const message = isAvailable
-    ? `Hi! I'm interested in account ${reference}${title ? ` (${title})` : ""}.`
+    ? `Hi! I'm interested in account ${reference}.`
     : `Hi! I saw account ${reference} is ${status}. Do you have anything similar?`;
 
   const copy = async () => {

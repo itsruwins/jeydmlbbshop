@@ -61,7 +61,6 @@ export default async function EditAccountPage({
           <DeleteAccountButton
             accountId={account.id}
             accountReference={account.account_reference}
-            title={account.title}
             imageCount={account.images.length}
             redirectTo="/admin/accounts"
             variant="secondary"

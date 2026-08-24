@@ -11,7 +11,7 @@ export type AccountSort =
   | "reference";
 
 export type GetAccountsOptions = {
-  /** Matches against reference and title. */
+  /** Matches against the account reference. */
   search?: string;
   status?: AccountStatus | "all";
   featuredOnly?: boolean;
@@ -53,14 +53,10 @@ export async function getAccounts(
 
   const term = search?.trim();
   if (term) {
-    // Commas and parentheses are the `or()` grammar's own separators, so a
-    // search containing them would be parsed as extra conditions rather than
-    // as text. Stripping them keeps a punctuation-heavy query from erroring.
-    const safe = term.replace(/[,()]/g, " ").trim();
+    // Reference only — the title column no longer exists.
+    const safe = term.trim();
     if (safe) {
-      query = query.or(
-        `account_reference.ilike.%${safe}%,title.ilike.%${safe}%`,
-      );
+      query = query.ilike("account_reference", `%${safe}%`);
     }
   }
 

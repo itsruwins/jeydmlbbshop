@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getSocialLinks } from "@/functions/socialLinks/getSocialLinks";
+import { SHOP } from "@/lib/constants/shop";
 
 /**
  * The footer, including the social destinations.
@@ -25,7 +26,9 @@ export async function SiteFooter() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
           <div className="flex flex-col gap-1.5">
-            <p className="font-semibold text-ink">MLBB Shop</p>
+            <p className="wordmark text-[length:var(--text-lg)] text-ink">
+              {SHOP.name}
+            </p>
             <p className="max-w-sm text-[length:var(--text-sm)] text-ink-3">
               Mobile Legends accounts, listed with full screenshots. Every deal
               is arranged directly with us.

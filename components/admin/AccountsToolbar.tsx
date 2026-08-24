@@ -95,7 +95,7 @@ export function AccountsToolbar({
           type="search"
           value={term}
           onChange={(event) => setTerm(event.target.value)}
-          placeholder="Search reference or title"
+          placeholder="Search reference"
           className="pr-9"
         />
         {pending && (

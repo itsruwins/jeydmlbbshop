@@ -30,7 +30,6 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
           <thead>
             <tr className="border-b border-[var(--border)] bg-surface-2">
               <Th>Reference</Th>
-              <Th>Title</Th>
               <Th align="right">Price</Th>
               <Th>Rank</Th>
               <Th>Collection</Th>
@@ -57,12 +56,6 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                   >
                     {account.account_reference}
                   </Link>
-                </Td>
-
-                <Td className="max-w-[16rem]">
-                  <span className="block truncate text-ink" title={account.title ?? undefined}>
-                    {orDash(account.title)}
-                  </span>
                 </Td>
 
                 <Td align="right" className="tabular font-medium text-ink">
@@ -112,7 +105,6 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                     <DeleteAccountButton
                       accountId={account.id}
                       accountReference={account.account_reference}
-                      title={account.title}
                       imageCount={account.images?.length ?? 0}
                     />
                   </div>
@@ -134,13 +126,10 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/admin/accounts/${account.id}/edit`}
-                  className="font-mono text-[length:var(--text-sm)] text-ink-2"
+                  className="block truncate font-mono font-medium text-ink"
                 >
                   {account.account_reference}
                 </Link>
-                <p className="truncate font-medium text-ink">
-                  {orDash(account.title)}
-                </p>
               </div>
 
               <FeaturedToggle
@@ -180,7 +169,6 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                 <DeleteAccountButton
                   accountId={account.id}
                   accountReference={account.account_reference}
-                  title={account.title}
                   imageCount={account.images?.length ?? 0}
                 />
               </div>

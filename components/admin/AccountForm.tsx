@@ -32,10 +32,8 @@ type FormState = {
   rank_id: string;
   collection_level_id: string;
   server: string;
-  account_level: string;
   hero_count: string;
   skin_count: string;
-  description: string;
   status: AccountStatus;
   is_featured: boolean;
 };
@@ -51,10 +49,8 @@ function initialState(
       rank_id: "",
       collection_level_id: "",
       server: "",
-      account_level: "",
       hero_count: "",
       skin_count: "",
-      description: "",
       // New listings start hidden so a half-finished draft cannot reach the
       // public marketplace by accident. Publishing is a deliberate act.
       status: "hidden",
@@ -71,10 +67,8 @@ function initialState(
     rank_id: account.rank_id ?? "",
     collection_level_id: account.collection_level_id ?? "",
     server: account.server ?? "",
-    account_level: text(account.account_level),
     hero_count: text(account.hero_count),
     skin_count: text(account.skin_count),
-    description: account.description ?? "",
     status: account.status,
     is_featured: account.is_featured,
   };
@@ -299,24 +293,6 @@ export function AccountForm({
             />
           </Field>
 
-          <Field
-            id="account_level"
-            label="Account level"
-            error={errors.account_level}
-          >
-            <Input
-              id="account_level"
-              inputMode="numeric"
-              value={values.account_level}
-              onChange={(event) => set("account_level", event.target.value)}
-              invalid={Boolean(errors.account_level)}
-              aria-describedby={describedBy("account_level", {
-                error: errors.account_level,
-              })}
-              className="tabular"
-            />
-          </Field>
-
           <Field id="hero_count" label="Heroes" error={errors.hero_count}>
             <Input
               id="hero_count"
@@ -346,24 +322,6 @@ export function AccountForm({
           </Field>
         </div>
 
-        <Field
-          id="description"
-          label="Description"
-          error={errors.description}
-          hint="Shown on the listing page. Plain text."
-        >
-          <Textarea
-            id="description"
-            value={values.description}
-            onChange={(event) => set("description", event.target.value)}
-            invalid={Boolean(errors.description)}
-            aria-describedby={describedBy("description", {
-              error: errors.description,
-              hasHint: true,
-            })}
-            placeholder="Rare skins, notable heroes, anything a buyer should know."
-          />
-        </Field>
       </Section>
 
       <Section title="Visibility">

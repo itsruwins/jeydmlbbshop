@@ -43,7 +43,6 @@ export const STATUS_LABELS: Record<AccountStatus, string> = {
 export type Account = {
   id: string;
   account_reference: string;
-  title: string | null;
   price: number;
   rank_id: string | null;
   collection_level_id: string | null;

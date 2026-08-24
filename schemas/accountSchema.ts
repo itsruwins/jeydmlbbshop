@@ -76,10 +76,8 @@ export const accountSchema = z.object({
   collection_level_id: z.string().uuid("Choose a collection level."),
 
   server: optionalText(60),
-  account_level: optionalCount("Account level", 500),
   hero_count: optionalCount("Hero count", 500),
   skin_count: optionalCount("Skin count", 5000),
-  description: optionalText(4000),
 
   status: z.enum(ACCOUNT_STATUSES, {
     message: "Choose a status.",
