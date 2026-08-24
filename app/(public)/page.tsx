@@ -5,11 +5,12 @@ import { AccountGrid } from "@/components/accounts/AccountGrid";
 import { FeaturedListing } from "@/components/home/FeaturedListing";
 import { VouchCard, VouchWall } from "@/components/home/VouchWall";
 import { VOUCHES } from "@/components/home/vouches";
+import { ContactButton } from "@/components/shared/ContactButton";
 import { Button } from "@/components/ui/Button";
 import { getPublicAccounts } from "@/functions/accounts/getPublicAccounts";
 import { getSocialLinks } from "@/functions/socialLinks/getSocialLinks";
 import { SHOP } from "@/lib/constants/shop";
-import { contactUrl } from "@/lib/utils/contactUrl";
+import { GENERAL_MESSAGE } from "@/lib/utils/contactMessage";
 
 /**
  * Cached and regenerated at most every five minutes.
@@ -92,13 +93,6 @@ export default async function HomePage() {
   const socialName =
     primarySocial?.label?.trim() || primarySocial?.platform?.trim() || "";
 
-  const contactHref = primarySocial
-    ? contactUrl(
-        primarySocial.url,
-        "Hi! I saw your shop and I have a question.",
-      )
-    : null;
-
   return (
     <>
       {/* ── Hero ───────────────────────────────────────────────────────────
@@ -168,20 +162,13 @@ export default async function HomePage() {
               </Button>
             </Link>
 
-            {contactHref && (
-              <a
-                href={contactHref}
-                target="_blank"
-                rel="noopener noreferrer"
+            {primarySocial && (
+              <ContactButton
+                link={primarySocial}
+                message={GENERAL_MESSAGE}
+                label={`Message us on ${socialName || "social media"}`}
                 className="sm:w-auto"
-              >
-                <Button
-                  variant="secondary"
-                  className="w-full sm:w-auto sm:px-6"
-                >
-                  Message us on {socialName || "social media"}
-                </Button>
-              </a>
+              />
             )}
           </div>
         </div>
@@ -272,17 +259,13 @@ export default async function HomePage() {
               arrives.
             </p>
 
-            {contactHref && (
-              <a
-                href={contactHref}
-                target="_blank"
-                rel="noopener noreferrer"
+            {primarySocial && (
+              <ContactButton
+                link={primarySocial}
+                message={GENERAL_MESSAGE}
+                label={`Tell us what you want on ${socialName || "social media"}`}
                 className="mt-5 inline-block"
-              >
-                <Button variant="secondary">
-                  Tell us what you want on {socialName || "social media"}
-                </Button>
-              </a>
+              />
             )}
           </div>
         )}

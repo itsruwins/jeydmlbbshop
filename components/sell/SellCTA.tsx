@@ -1,5 +1,6 @@
 import { SocialButtons } from "@/components/shared/SocialButtons";
 import { getSocialLinks } from "@/functions/socialLinks/getSocialLinks";
+import { SELL_MESSAGE } from "@/lib/utils/contactMessage";
 
 /**
  * The seller's call to action.
@@ -28,7 +29,7 @@ export async function SellCTA({
 
       <SocialButtons
         links={links}
-        message="Hi! I'd like to sell my MLBB account."
+        message={SELL_MESSAGE}
         emptyNotice="Contact details are being set up. Please check back shortly."
       />
     </div>

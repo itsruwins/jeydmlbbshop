@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { SocialButtons } from "@/components/shared/SocialButtons";
+import { listingMessage } from "@/lib/utils/contactMessage";
 import { cn } from "@/lib/utils/cn";
 import type { AccountStatus } from "@/types/account";
 import type { SocialLink } from "@/types/socialLink";
@@ -12,9 +13,8 @@ import type { SocialLink } from "@/types/socialLink";
  *
  * There is no checkout — the whole point of this page is to hand the
  * conversation to social media with enough context that the seller knows
- * immediately which account is meant. That context is the reference, so it is
- * pre-filled into the message where the platform allows it and copyable
- * everywhere else.
+ * immediately which account is meant. That context is the reference and the
+ * price, written into a message the buyer can send as-is.
  *
  * Reserved and sold listings keep a contact route rather than losing it. Someone
  * looking at a sold account is a buyer with proven taste, and "ask about
@@ -22,10 +22,13 @@ import type { SocialLink } from "@/types/socialLink";
  */
 export function ContactCTA({
   reference,
+  price,
   status,
   socialLinks,
 }: {
   reference: string;
+  /** Quoted in the message, so it records what the buyer was looking at. */
+  price: number | null;
   status: AccountStatus;
   socialLinks: SocialLink[];
 }) {
@@ -33,18 +36,16 @@ export function ContactCTA({
 
   const isAvailable = status === "available";
 
-  const message = isAvailable
-    ? `Hi! I'm interested in account ${reference}.`
-    : `Hi! I saw account ${reference} is ${status}. Do you have anything similar?`;
+  const message = listingMessage({ reference, price, status });
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(reference);
+      await navigator.clipboard.writeText(message);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard access can be refused (insecure context, permissions).
-      // The reference is on screen either way, so there is nothing to recover.
+      // The message is on screen and selectable either way.
     }
   };
 
@@ -69,14 +70,22 @@ export function ContactCTA({
         emptyNotice="Contact details are being set up. Please check back shortly."
       />
 
-      {/* Always present, because most platforms cannot pre-fill a message and
-          the reference is what identifies the account in a chat. */}
-      <div className="flex items-center justify-between gap-3 rounded-[var(--radius)] bg-surface-2 px-3 py-2.5">
-        <div className="flex min-w-0 flex-col">
+      {/* The message, shown in full rather than described.
+
+          It is here for two reasons. A buyer can see exactly what they are
+          about to send before they send it — nobody likes pasting text they
+          have not read — and it is the fallback for every case where the
+          clipboard write above is refused, which is common inside in-app
+          browsers. Both controls copy the same string, so it does not matter
+          which one is used, or in which order. */}
+      <div className="flex items-start justify-between gap-3 rounded-[var(--radius)] bg-surface-2 px-3 py-2.5">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-[length:var(--text-xs)] text-ink-3">
-            Quote this reference
+            Your message
           </span>
-          <span className="truncate font-mono text-ink">{reference}</span>
+          <span className="text-[length:var(--text-sm)] leading-relaxed text-ink">
+            {message}
+          </span>
         </div>
 
         <button
@@ -91,7 +100,7 @@ export function ContactCTA({
           )}
         >
           {copied ? "Copied" : "Copy"}
-          <span className="sr-only"> account reference</span>
+          <span className="sr-only"> message</span>
         </button>
       </div>
     </div>

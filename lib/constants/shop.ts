@@ -17,6 +17,14 @@ export const SHOP = {
   shortName: "Jeyd",
 
   /**
+   * Who the buyer is writing to. Used in the greeting of every pre-written
+   * message: a name makes the first line read as a person being addressed
+   * rather than a form being submitted, which is the whole difference between
+   * this shop and a marketplace listing.
+   */
+  ownerName: "Jade",
+
+  /**
    * Accounts sold to date. Deliberately written as a string with the `+`: it
    * is a floor, not a count, and rendering it as a number would invite someone
    * to increment it automatically from a table that does not hold that history.

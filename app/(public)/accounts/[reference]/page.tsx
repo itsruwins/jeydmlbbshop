@@ -110,6 +110,7 @@ export default async function AccountDetailPage({
 
           <ContactCTA
             reference={account.account_reference}
+            price={account.price}
             status={account.status}
             socialLinks={socialLinks}
           />
