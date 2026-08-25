@@ -1,9 +1,14 @@
+import { AdminLoginDialog } from "@/components/shared/AdminLoginDialog";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { SiteHeader } from "@/components/shared/SiteHeader";
 
 /**
  * The public shell. Header and footer are shared by every buyer-facing page;
  * the admin lives in its own group and shares none of it.
+ *
+ * `AdminLoginDialog` is the one exception: it is mounted here so `Ctrl+M`
+ * opens the sign-in dialog from anywhere on the storefront rather than only
+ * from the homepage. It renders nothing until that happens.
  */
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
@@ -34,6 +39,8 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <SiteFooter />
+
+      <AdminLoginDialog />
     </div>
   );
 }
