@@ -114,18 +114,34 @@ No `is_active` column on this table.
 
 ### `social_links`
 
-| Column | Type |
-| --- | --- |
-| `id` | `uuid` |
-| `platform` | `text` |
-| `label` | `text` |
-| `url` | `text` |
-| `is_active` | `boolean` |
-| `display_order` | `integer` |
-| `created_at` | `timestamptz` |
-| `updated_at` | `timestamptz` |
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `uuid` | |
+| `platform` | `text` | One of `schemas/socialLinkSchema.ts`'s `SOCIAL_PLATFORMS` |
+| `label` | `text` | The button text for a contact link; the handle for a follow link |
+| `url` | `text` | Opened exactly as stored. Nothing rewrites it |
+| `kind` | `text` | `contact` \| `follow`. Added 26 Aug 2026 |
+| `is_active` | `boolean` | |
+| `display_order` | `integer` | |
+| `created_at` | `timestamptz` | |
+| `updated_at` | `timestamptz` | |
 
-Currently empty. Consumed in Phase 7; the single source of social URLs.
+The single source of social URLs.
+
+`kind` decides which surface a row lands on. `contact` rows are the "Message us
+on …" buttons, and the first active one carries every conversation on the site;
+`follow` rows are the icon links in the header, footer, homepage band and under
+the contact panels. It is `text` with a CHECK constraint — the same choice as
+`accounts.status`, and re-validated in Zod on the way in for the same reason.
+
+It carries `not null default 'contact'`, so a row inserted without one behaves
+as every row did before the column existed. The application also coerces any
+unrecognised value to `contact` when reading (`lib/utils/socialLinks.ts`):
+failing that way round costs a follow icon, where the other way round would
+hide the button people use to reach the shop.
+
+Added by `supabase/changes/2026-08-26-social-link-kind.sql`, which also inserted
+the TikTok and Instagram profiles as the first two `follow` rows.
 
 ## Relationships
 

@@ -18,11 +18,18 @@ import type { SocialLink } from "@/types/socialLink";
 import { SocialLinkForm } from "./SocialLinkForm";
 
 /**
- * Manage where "message us" sends people.
+ * Manage where the site sends people.
+ *
+ * Two kinds of row share this list. Contact links are the "Message us on …"
+ * buttons; follow links are the icons that go to a profile. They are kept in
+ * one list rather than two because they share an order and an on/off switch,
+ * and because seeing them together is what makes it obvious when the shop has
+ * three feeds and no inbox.
  *
  * Order is the feature that needs explaining, so the list explains it: the
- * first active link is labelled as the primary button, because that is what
- * decides which platform carries every conversation on the site.
+ * first active *contact* link is labelled as the primary button, because that
+ * is what decides which platform carries every conversation on the site. A
+ * follow link never takes that role no matter how high it sits.
  *
  * Reordering uses move buttons rather than drag-and-drop, for the same reason
  * as the image gallery — drag is unusable by keyboard and awkward on a phone.
@@ -46,7 +53,9 @@ export function SocialLinksManager({ links }: { links: SocialLink[] }) {
     setItems(links);
   }
 
-  const primaryId = items.find((item) => item.is_active)?.id;
+  const primaryId = items.find(
+    (item) => item.is_active && item.kind === "contact",
+  )?.id;
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
@@ -112,17 +121,22 @@ export function SocialLinksManager({ links }: { links: SocialLink[] }) {
     });
   };
 
-  const activeCount = items.filter((item) => item.is_active).length;
+  // Only contact links are counted: a page full of follow icons and no way to
+  // message anyone is the failure this warning exists to catch.
+  const activeContactCount = items.filter(
+    (item) => item.is_active && item.kind === "contact",
+  ).length;
 
   return (
     <div className="flex flex-col gap-5">
-      {activeCount === 0 && (
+      {activeContactCount === 0 && (
         <p
           role="status"
           className="rounded-[var(--radius)] border border-[var(--danger-border)] bg-danger-bg px-3.5 py-3 text-[length:var(--text-sm)] text-danger-ink"
         >
-          No active links, so every “Message us” button on the site is currently
-          hidden. Buyers and sellers have no way to reach you.
+          No active contact links, so every “Message us” button on the site is
+          currently hidden. Buyers and sellers have no way to reach you — follow
+          icons send people to a feed, not to an inbox.
         </p>
       )}
 
@@ -130,7 +144,7 @@ export function SocialLinksManager({ links }: { links: SocialLink[] }) {
         <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface">
           <EmptyState
             title="No social links yet"
-            description="Add the account you want buyers and sellers to message. The first one becomes the main button on every listing."
+            description="Add the account you want buyers and sellers to message. The first one becomes the main button on every listing — the feeds you post to can go in afterwards."
             action={<Button variant="primary" onClick={() => setAdding(true)}>Add a link</Button>}
           />
         </div>
@@ -182,6 +196,11 @@ export function SocialLinksManager({ links }: { links: SocialLink[] }) {
                         Main button
                       </span>
                     )}
+                    {link.kind === "follow" && (
+                      <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[length:var(--text-xs)] text-ink-2">
+                        Follow icon
+                      </span>
+                    )}
                     {!link.is_active && (
                       <span className="rounded-full border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[length:var(--text-xs)] text-ink-3">
                         Hidden
@@ -189,7 +208,7 @@ export function SocialLinksManager({ links }: { links: SocialLink[] }) {
                     )}
                   </div>
                   <p className="mt-0.5 truncate font-mono text-[length:var(--text-sm)] text-ink-3">
-                    {contactUrl(link.url, "")}
+                    {link.kind === "follow" ? link.url : contactUrl(link.url, "")}
                   </p>
                 </div>
 

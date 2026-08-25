@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { normaliseSocialLinks } from "@/lib/utils/socialLinks";
 import type { SocialLink } from "@/types/socialLink";
 
 /**
@@ -14,12 +15,12 @@ export async function getAllSocialLinks(): Promise<SocialLink[]> {
 
   const { data, error } = await supabase
     .from("social_links")
-    .select("id, platform, label, url, is_active, display_order")
+    .select("id, platform, label, url, kind, is_active, display_order")
     .order("display_order", { ascending: true });
 
   if (error) {
     throw new Error(`Could not load social links: ${error.message}`);
   }
 
-  return (data ?? []) as SocialLink[];
+  return normaliseSocialLinks(data);
 }

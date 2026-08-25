@@ -25,6 +25,12 @@ const LINKS = [
  * A translucent layer with the page scrolling underneath rather than an opaque
  * bar that permanently consumes a strip of a phone screen. `prefers-reduced-
  * transparency` turns it solid.
+ *
+ * No social links here. They were tried beside the theme toggle and read as
+ * chrome: a follow link sitting next to a settings control is something you
+ * skip past, not something you press. They live where someone is already
+ * looking at the shop rather than at the furniture — the hero's fact row, the
+ * footer, and under the message buttons on the listing and seller pages.
  */
 export function SiteHeader() {
   const pathname = usePathname();

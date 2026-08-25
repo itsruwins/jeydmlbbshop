@@ -39,6 +39,7 @@ export async function updateSocialLink(
       platform: parsed.data.platform,
       label: parsed.data.label,
       url: parsed.data.url,
+      kind: parsed.data.kind,
       is_active: parsed.data.is_active,
     })
     .eq("id", id);

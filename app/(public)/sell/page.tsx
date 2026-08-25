@@ -132,6 +132,7 @@ export default function SellPage() {
         <SellCTA
           heading="Send us your account"
           body="Message us with the details and screenshots above, and we will come back to you with a valuation."
+          showFollow
         />
       </div>
     </div>

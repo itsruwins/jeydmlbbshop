@@ -13,9 +13,15 @@ export default async function SocialLinksPage() {
       <header className="flex flex-col gap-1">
         <h1>Social links</h1>
         <p className="max-w-[65ch] text-ink-3">
-          Where “Message us” sends people. The site takes no payments, so these
-          links are how every buyer and seller reaches you. The first active one
-          becomes the main button on every listing and on the seller page.
+          Where the site sends people. The shop takes no payments, so these
+          links are how every buyer and seller reaches you.
+        </p>
+        <p className="max-w-[65ch] text-ink-3">
+          Each one is either somewhere to <strong className="font-medium text-ink-2">message you</strong> —
+          the first active one becomes the main button on every listing and on
+          the seller page — or somewhere to <strong className="font-medium text-ink-2">follow you</strong>,
+          which appears as an icon in the header, the footer and the homepage
+          instead.
         </p>
       </header>
 

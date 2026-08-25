@@ -7,11 +7,13 @@ import { StockShelf } from "@/components/home/StockShelf";
 import { VouchCard } from "@/components/home/VouchWall";
 import { VOUCHES } from "@/components/home/vouches";
 import { ContactButton } from "@/components/shared/ContactButton";
+import { FollowLinks } from "@/components/shared/FollowLinks";
 import { Button } from "@/components/ui/Button";
 import { getPublicAccounts } from "@/functions/accounts/getPublicAccounts";
 import { getSocialLinks } from "@/functions/socialLinks/getSocialLinks";
 import { SHOP } from "@/lib/constants/shop";
 import { GENERAL_MESSAGE } from "@/lib/utils/contactMessage";
+import { contactLinks, followLinks } from "@/lib/utils/socialLinks";
 
 /**
  * Cached and regenerated at most every five minutes.
@@ -53,7 +55,7 @@ export const metadata: Metadata = {
  * cards, four times over. That uniform cadence is what made it read as
  * generated, more than any individual choice inside it. Every fold here has its
  * own spatial idea instead: an asymmetric split, a shelf that bleeds off the
- * page, an inverted band, a moving strip, a sticky two-column index. The rhythm
+ * page, an inverted band, a moving strip, a two-column index. The rhythm
  * changing as you scroll is the point.
  */
 
@@ -78,7 +80,10 @@ export default async function HomePage() {
     getSocialLinks(),
   ]);
 
-  const primarySocial = socials[0];
+  // The first *contact* link, which is the one carrying conversations. A feed
+  // is not somewhere a buyer can be answered, so it can never lead here.
+  const primarySocial = contactLinks(socials)[0];
+  const follow = followLinks(socials);
   const socialName =
     primarySocial?.label?.trim() || primarySocial?.platform?.trim() || "";
 
@@ -119,6 +124,33 @@ export default async function HomePage() {
                   label={`Message us on ${socialName || "social media"}`}
                   className="sm:w-auto"
                 />
+              )}
+
+              {/* The feeds, trailing the two buttons rather than pushed to the
+                  far edge of the column. Everything else in this column is
+                  left-aligned, so an element hard against the right margin had
+                  nothing to line up with and read as adrift.
+
+                  The caption is two words and it is load-bearing: bare icons
+                  immediately after a button reading "Message us on Facebook"
+                  invite exactly the assumption the contact/follow split exists
+                  to prevent — that a buyer can send their reference to a
+                  TikTok profile. "Also on" says these are somewhere we are,
+                  not somewhere to write to.
+
+                  The rule only appears once the row is horizontal. Stacked on
+                  a phone it would divide nothing. */}
+              {follow.length > 0 && (
+                <div className="mt-1.5 flex items-center gap-3 sm:mt-0 sm:pl-1">
+                  <span
+                    aria-hidden="true"
+                    className="hidden h-6 w-px bg-[var(--border)] sm:block"
+                  />
+                  <span className="text-[length:var(--text-sm)] text-ink-3">
+                    Also on
+                  </span>
+                  <FollowLinks links={follow} variant="solid" />
+                </div>
               )}
             </div>
 
@@ -288,11 +320,14 @@ export default async function HomePage() {
       )}
 
       {/* ── 5. The questions ───────────────────────────────────────────────
-          A sticky heading beside a scrolling index. None of the marketplaces
-          answer these on the page; they bury them in a help centre. */}
+          A heading beside a scrolling index. None of the marketplaces answer
+          these on the page; they bury them in a help centre. */}
       <section className="border-b border-[var(--border)] bg-surface-2">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-16">
-          <div className="lg:sticky lg:top-24 lg:self-start">
+          {/* Not pinned. A heading that holds still while its own questions
+              scroll past reads as the page having come loose, and the section
+              is short enough that the heading is never far away. */}
+          <div>
             <h2 className="display text-[length:var(--display-2)] text-ink">
               Before you ask
             </h2>

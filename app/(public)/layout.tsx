@@ -16,7 +16,21 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
       </a>
 
       <SiteHeader />
-      <main id="main" className="flex-1">
+
+      {/* `relative z-0` is the reason nothing paints over the header.
+
+          It makes <main> a stacking context, so every z-index inside the page
+          — the hero's `z-10`, a card's `z-20` badge, the carousel's controls —
+          is sorted *within* main and then the whole block is placed below the
+          header's `--z-sticky`. Without it those numbers compete with the
+          header directly in the root stacking context: the hero's `z-10` ties
+          the header's, comes later in the document, and wins.
+
+          Fixing it here rather than by renumbering each offender means the
+          next element to reach for a z-index cannot reintroduce the bug.
+          Modal dialogs are unaffected — they use the native `<dialog>` top
+          layer, which no stacking context can trap. */}
+      <main id="main" className="relative z-0 flex-1">
         {children}
       </main>
       <SiteFooter />

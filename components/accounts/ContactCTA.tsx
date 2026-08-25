@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 
+import { FollowLinks } from "@/components/shared/FollowLinks";
 import { SocialButtons } from "@/components/shared/SocialButtons";
 import { listingMessage } from "@/lib/utils/contactMessage";
 import { cn } from "@/lib/utils/cn";
+import { contactLinks, followLinks } from "@/lib/utils/socialLinks";
 import type { AccountStatus } from "@/types/account";
 import type { SocialLink } from "@/types/socialLink";
 
@@ -19,6 +21,12 @@ import type { SocialLink } from "@/types/socialLink";
  * Reserved and sold listings keep a contact route rather than losing it. Someone
  * looking at a sold account is a buyer with proven taste, and "ask about
  * something similar" is a better outcome than a dead end.
+ *
+ * The follow icons underneath are the quieter version of that same idea. A
+ * buyer who is interested but not ready to open a chat has, until now, had
+ * nothing to do with that feeling; a feed of new stock is somewhere for it to
+ * go. They sit below the message and read as an aside, because a listing page
+ * has exactly one action and this is not it.
  */
 export function ContactCTA({
   reference,
@@ -37,6 +45,8 @@ export function ContactCTA({
   const isAvailable = status === "available";
 
   const message = listingMessage({ reference, price, status });
+
+  const follow = followLinks(socialLinks);
 
   const copy = async () => {
     try {
@@ -65,7 +75,7 @@ export function ContactCTA({
       </div>
 
       <SocialButtons
-        links={socialLinks}
+        links={contactLinks(socialLinks)}
         message={message}
         emptyNotice="Contact details are being set up. Please check back shortly."
       />
@@ -103,6 +113,15 @@ export function ContactCTA({
           <span className="sr-only"> message</span>
         </button>
       </div>
+
+      {follow.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[var(--border)] pt-3">
+          <span className="text-[length:var(--text-sm)] text-ink-3">
+            New stock goes up on
+          </span>
+          <FollowLinks links={follow} variant="solid" />
+        </div>
+      )}
     </div>
   );
 }

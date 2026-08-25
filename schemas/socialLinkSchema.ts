@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { SocialLinkKind } from "@/types/socialLink";
+
 /**
  * Validation for a social destination.
  *
@@ -22,6 +24,22 @@ export const SOCIAL_PLATFORMS = [
   "Other",
 ] as const;
 
+export const SOCIAL_LINK_KINDS = [
+  "contact",
+  "follow",
+] as const satisfies readonly SocialLinkKind[];
+
+/**
+ * Platforms that are a feed rather than an inbox, so the form can preselect
+ * "follow" when one is chosen. A suggestion only — a shop that genuinely takes
+ * orders through Instagram DMs changes it back, and nothing here overrides it.
+ */
+const FEED_PLATFORMS = new Set<string>(["Instagram", "TikTok", "X"]);
+
+export function suggestedKind(platform: string): SocialLinkKind {
+  return FEED_PLATFORMS.has(platform.trim()) ? "follow" : "contact";
+}
+
 export const socialLinkSchema = z.object({
   platform: z
     .string()
@@ -32,8 +50,15 @@ export const socialLinkSchema = z.object({
   label: z
     .string()
     .trim()
-    .min(1, "Add a label — it is the text buyers see on the button.")
+    .min(1, "Add a label — it is the name buyers see on the link.")
     .max(40, "Label must be 40 characters or fewer."),
+
+  /**
+   * Contact links become "Message us on …" buttons; follow links become the
+   * icon row. Defaulted rather than required so a row written before this
+   * field existed still parses, and defaults to the behaviour it already had.
+   */
+  kind: z.enum(SOCIAL_LINK_KINDS).default("contact"),
 
   url: z
     .string()

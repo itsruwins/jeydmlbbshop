@@ -17,14 +17,16 @@ import {
 } from "@/lib/utils/contactUrl";
 import {
   SOCIAL_PLATFORMS,
+  suggestedKind,
   type SocialLinkFieldErrors,
 } from "@/schemas/socialLinkSchema";
-import type { SocialLink } from "@/types/socialLink";
+import type { SocialLink, SocialLinkKind } from "@/types/socialLink";
 
 type FormState = {
   platform: string;
   label: string;
   url: string;
+  kind: SocialLinkKind;
   is_active: boolean;
 };
 
@@ -35,6 +37,14 @@ type FormState = {
  * is rewritten to a Messenger deep link at render time, and only some platforms
  * accept a pre-filled message — both are invisible decisions the admin would
  * otherwise have to discover by clicking the live button on the public site.
+ *
+ * `kind` is the first question the form asks, because it changes what every
+ * answer below it means: a contact link becomes a "Message us on …" button
+ * carrying a pre-written message, and a follow link becomes an icon that goes
+ * straight to the profile. Choosing a platform suggests one — Instagram and
+ * TikTok are usually feeds — and the suggestion stops as soon as it is
+ * overruled, since a shop that really does take orders through Instagram DMs
+ * should not have to fight the form about it.
  */
 export function SocialLinkForm({
   link,
@@ -51,8 +61,11 @@ export function SocialLinkForm({
     platform: link?.platform ?? "",
     label: link?.label?.trim() ?? "",
     url: link?.url ?? "",
+    kind: link?.kind ?? "contact",
     is_active: link?.is_active ?? true,
   });
+  // An edited row already carries a decision; only a new one is guessed at.
+  const [kindChosen, setKindChosen] = useState(isEdit);
   const [errors, setErrors] = useState<SocialLinkFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, startTransition] = useTransition();
@@ -68,6 +81,9 @@ export function SocialLinkForm({
       // perfectly good label.
       if (key === "platform" && !current.label.trim()) {
         next.label = String(value);
+      }
+      if (key === "platform" && !kindChosen) {
+        next.kind = suggestedKind(String(value));
       }
       return next;
     });
@@ -98,15 +114,23 @@ export function SocialLinkForm({
     });
   };
 
+  const isFollow = values.kind === "follow";
+
   const trimmedUrl = values.url.trim();
-  const preview = trimmedUrl
-    ? contactUrl(trimmedUrl, "Hi! I'm interested in account J1.")
-    : "";
+
+  // A follow link is opened exactly as saved — no message to carry, so none of
+  // the rewriting below applies to it.
+  const preview = !trimmedUrl
+    ? ""
+    : isFollow
+      ? trimmedUrl
+      : contactUrl(trimmedUrl, "Hi! I'm interested in account J1.");
 
   // Offered, never applied. Whether m.me works depends on the destination
   // being a Facebook Page, which the URL alone cannot tell us — so the admin
   // tests it and decides.
-  const messengerSuggestion = trimmedUrl ? suggestMessengerUrl(trimmedUrl) : null;
+  const messengerSuggestion =
+    trimmedUrl && !isFollow ? suggestMessengerUrl(trimmedUrl) : null;
 
   return (
     <form
@@ -126,6 +150,35 @@ export function SocialLinkForm({
           {formError}
         </p>
       )}
+
+      <Field
+        id="kind"
+        label="What this link is for"
+        required
+        error={errors.kind}
+        hint={
+          isFollow
+            ? "An icon on the site, going straight to the profile. No message is sent with it."
+            : "A “Message us on …” button, with the buyer’s message already written."
+        }
+      >
+        <Select
+          id="kind"
+          value={values.kind}
+          invalid={Boolean(errors.kind)}
+          aria-describedby={describedBy("kind", {
+            error: errors.kind,
+            hasHint: true,
+          })}
+          onChange={(event) => {
+            setKindChosen(true);
+            set("kind", event.target.value as SocialLinkKind);
+          }}
+        >
+          <option value="contact">Messaging us — buyers and sellers</option>
+          <option value="follow">Following us — where we post</option>
+        </Select>
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="platform" label="Platform" required error={errors.platform}>
@@ -147,10 +200,14 @@ export function SocialLinkForm({
 
         <Field
           id="label"
-          label="Button label"
+          label={isFollow ? "Handle" : "Button label"}
           required
           error={errors.label}
-          hint="Shown as “Message us on …”."
+          hint={
+            isFollow
+              ? "Shown under the platform name, e.g. @jeydselyn."
+              : "Shown as “Message us on …”."
+          }
         >
           <Input
             id="label"
@@ -161,7 +218,7 @@ export function SocialLinkForm({
               error: errors.label,
               hasHint: true,
             })}
-            placeholder="Facebook"
+            placeholder={isFollow ? "@yourhandle" : "Facebook"}
           />
         </Field>
       </div>
@@ -193,7 +250,7 @@ export function SocialLinkForm({
       {preview && (
         <div className="flex flex-col gap-1.5 rounded-[var(--radius)] bg-surface-2 px-3.5 py-3">
           <span className="text-[length:var(--text-xs)] text-ink-3">
-            The button will open
+            {isFollow ? "The icon will open" : "The button will open"}
           </span>
           <a
             href={preview}
@@ -204,9 +261,11 @@ export function SocialLinkForm({
             {preview}
           </a>
           <span className="text-[length:var(--text-sm)] text-ink-3">
-            {supportsPrefill(trimmedUrl)
-              ? "The buyer's message will be typed in for them."
-              : "This platform cannot pre-fill a message, so buyers use the copy-reference button instead."}
+            {isFollow
+              ? "Opened as saved. Nothing is added to the link."
+              : supportsPrefill(trimmedUrl)
+                ? "The buyer's message will be typed in for them."
+                : "This platform cannot pre-fill a message, so buyers use the copy-reference button instead."}
           </span>
         </div>
       )}
@@ -254,7 +313,11 @@ export function SocialLinkForm({
           onChange={(event) => set("is_active", event.target.checked)}
           className="size-4 accent-[var(--accent)]"
         />
-        <span className="text-ink-2">Show this link on the website</span>
+        <span className="text-ink-2">
+          {isFollow
+            ? "Show this icon on the website"
+            : "Show this button on the website"}
+        </span>
       </label>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
