@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AccountGrid } from "@/components/accounts/AccountGrid";
-import { FeaturedListing } from "@/components/home/FeaturedListing";
-import { VouchCard, VouchWall } from "@/components/home/VouchWall";
-import { HERO_VOUCH_IDS, VOUCHES } from "@/components/home/vouches";
+import { Faq } from "@/components/home/Faq";
+import { HeroShowcase } from "@/components/home/HeroShowcase";
+import { StockShelf } from "@/components/home/StockShelf";
+import { VouchCard } from "@/components/home/VouchWall";
+import { VOUCHES } from "@/components/home/vouches";
 import { ContactButton } from "@/components/shared/ContactButton";
 import { Button } from "@/components/ui/Button";
 import { getPublicAccounts } from "@/functions/accounts/getPublicAccounts";
@@ -15,66 +16,59 @@ import { GENERAL_MESSAGE } from "@/lib/utils/contactMessage";
 /**
  * Cached and regenerated at most every five minutes.
  *
- * This page reads listings anonymously, which means Next can — and without this
+ * The page reads listings anonymously, which means Next can — and without this
  * line, does — prerender it once at build time and serve that forever. The
  * storefront would then be frozen at whatever stock existed when the site was
- * deployed.
- *
- * Five minutes is the ceiling, not the usual case: the account mutations call
- * `revalidatePath("/")`, so an edit in the admin shows up here straight away.
- * The window only matters for changes made outside the app.
+ * deployed. Five minutes is the ceiling, not the usual case: the account
+ * mutations call `revalidatePath("/")`, so an admin edit shows up straight away.
  */
 export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: {
-    absolute: `${SHOP.name} — Mobile Legends accounts, handed over personally`,
+    absolute: `${SHOP.name} — Mobile Legends accounts, shown in full`,
   },
   description:
     "Mobile Legends: Bang Bang accounts listed with their full screenshot set, real rank, collection level and skin count. Message us and we arrange the handover directly.",
 };
 
 /**
- * The feedback that stands in the hero, and the rest.
+ * The storefront.
  *
- * Chosen by id in `vouches.ts` rather than by taking the first few, so
- * reordering the wall cannot silently change which comments carry the top of
- * the page. Whatever is not in the hero falls through to the wall, so no vouch
- * can be dropped by accident either.
- */
-const HERO_VOUCHES = VOUCHES.filter((vouch) =>
-  (HERO_VOUCH_IDS as readonly string[]).includes(vouch.id),
-);
-const WALL_VOUCHES = VOUCHES.filter(
-  (vouch) => !(HERO_VOUCH_IDS as readonly string[]).includes(vouch.id),
-);
-
-/**
- * The claims that are not the sold count.
+ * ## Why it is shaped like this
  *
- * The count is the headline on this version, so repeating it here would be the
- * page arguing with itself. What is left is what a buyer weighs *after* they
- * believe the shop is real: how fast someone answers, what they can check
- * before paying, and who they are dealing with.
+ * Every competing marketplace — PlayerAuctions, G2G, PlayHub, GameMarket,
+ * Zeusx — opens with a paragraph of prose and shows nothing for sale until you
+ * click into a category. Their trust signals are all borrowed numbers: seller
+ * ratings, review counts, inventory totals.
+ *
+ * This shop cannot win on inventory and should not try. What it has instead is
+ * a small, completely photographed catalogue and one person answering the
+ * messages — so the page leads with the goods: a real listing at real size in
+ * the first fold, live from the database.
+ *
+ * ## Why each section looks different
+ *
+ * The previous version was one centred column of heading → paragraph → row of
+ * cards, four times over. That uniform cadence is what made it read as
+ * generated, more than any individual choice inside it. Every fold here has its
+ * own spatial idea instead: an asymmetric split, a shelf that bleeds off the
+ * page, an inverted band, a moving strip, a sticky two-column index. The rhythm
+ * changing as you scroll is the point.
  */
-const CREDENTIALS = [
-  `Replies ${SHOP.replyTime}`,
-  "Full screenshot set on every listing",
-  "Handover done with you directly",
-];
 
 const STEPS = [
   {
     title: "Open a listing",
-    body: "Every account shows its full screenshot set, rank, collection level, skin count and server. Read all of it before you say a word to us.",
+    body: "Full screenshot set, rank, collection level, skin count, server. Read all of it before you say a word to us.",
   },
   {
     title: "Message us",
-    body: "The contact button opens our Facebook with the account's reference ready to send. Ask anything — the account is not going anywhere while you decide.",
+    body: "The button copies a message with the reference already in it. Ask anything — nothing is reserved and nothing is rushed.",
   },
   {
-    title: "Arrange the handover",
-    body: "We agree the details with you directly, walk through the email and binding change together, and stay with it until the account is yours.",
+    title: "Do the handover",
+    body: "We go through the email and binding change together, and stay with it until you have signed in yourself.",
   },
 ];
 
@@ -84,232 +78,143 @@ export default async function HomePage() {
     getSocialLinks(),
   ]);
 
-  const lead =
-    catalogue.available.find((account) => account.is_featured) ??
-    catalogue.available[0] ??
-    null;
-
-  const rest = lead
-    ? catalogue.available.filter((account) => account.id !== lead.id)
-    : [];
-
   const primarySocial = socials[0];
   const socialName =
     primarySocial?.label?.trim() || primarySocial?.platform?.trim() || "";
 
+  const inStock = catalogue.available.length;
+
   return (
     <>
-      {/* ── Hero ───────────────────────────────────────────────────────────
-          Proof first, product second — the inversion this version is built on.
-
-          A shop nobody has heard of, asking a stranger to send money outside
-          any platform's protection, has exactly one problem, and it is not
-          that the visitor cannot find the stock. It is that they do not believe
-          the shop is real. So the first thing on the page is the number of
-          people who already went through it, and the first thing they read
-          after that is those people talking. The account for sale comes next,
-          once there is a reason to care. */}
-      <section className="relative overflow-hidden border-b border-[var(--border)]">
-        <div
-          aria-hidden="true"
-          className="brand-wash pointer-events-none absolute inset-0"
-        />
-        <div
-          aria-hidden="true"
-          className="plate pointer-events-none absolute inset-0"
-        />
-
-        <div className="relative mx-auto w-full max-w-6xl px-4 pb-14 pt-16 sm:px-6 sm:pb-20 sm:pt-24">
-          <div className="flex max-w-3xl flex-col items-start gap-6">
-            <h1 className="rise display text-[length:var(--display-1)] text-ink">
-              {SHOP.accountsSold} accounts handed over.
-              {/* The second line is the whole argument of the page, so it stays
-                  inside the headline rather than becoming a subtitle under it —
-                  but a step down in size. Set at the same scale it ran four
-                  lines deep and pushed the quotes, which are the actual proof,
-                  below the fold on a laptop.
-
-                  It only appears when there is feedback to point at. "Here is
-                  what they said", followed by nothing, is worse than not making
-                  the claim: it reads as a page with its content missing. */}
-              {HERO_VOUCHES.length > 0 && (
-                <span className="mt-2 block text-[length:var(--display-2)] text-accent-display">
-                  Here is what they said.
-                </span>
-              )}
+      {/* ── 1. The goods ───────────────────────────────────────────────────
+          Asymmetric split: the argument on the left, a live listing on the
+          right at the size a listing deserves. */}
+      <section className="wedge relative overflow-hidden border-b border-[var(--border)]">
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-14 lg:pb-24 lg:pt-24">
+          <div className="enter-stagger flex max-w-2xl flex-col items-start gap-6">
+            <h1 className="display text-[length:var(--display-1)] text-ink">
+              Every account,
+              <span className="block text-accent-display">shown in full.</span>
             </h1>
 
-            <p
-              className="rise max-w-[58ch] text-[length:var(--text-md)] leading-relaxed text-ink-2 sm:text-[length:var(--text-lg)]"
-              style={{ animationDelay: "80ms" }}
-            >
-              Mobile Legends accounts, every one listed with its full screenshot
-              set and checked before a peso moves. We handle the handover with
-              you personally, start to finish.
+            <p className="max-w-[54ch] text-[length:var(--text-md)] leading-relaxed text-ink-2 sm:text-[length:var(--text-lg)]">
+              Not a marketplace of strangers. One shop, {SHOP.accountsSold}{" "}
+              accounts handed over, and every listing photographed end to end
+              before it goes up.
             </p>
-          </div>
 
-          {HERO_VOUCHES.length > 0 && (
-            <ul
-              className="rise mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-              style={{ animationDelay: "160ms" }}
-            >
-              {HERO_VOUCHES.map((vouch) => (
-                <li key={vouch.id} className="flex">
-                  <VouchCard vouch={vouch} className="w-full" />
-                </li>
-              ))}
-            </ul>
-          )}
+            <div className="flex w-full flex-col gap-2.5 pt-1 sm:w-auto sm:flex-row sm:items-center">
+              <Link href="/accounts" className="sm:w-auto">
+                <Button variant="primary" className="w-full sm:w-auto sm:px-6">
+                  {inStock > 0
+                    ? `Browse ${inStock} account${inStock === 1 ? "" : "s"}`
+                    : "Browse accounts"}
+                </Button>
+              </Link>
 
-          <div
-            className="rise mt-10 flex flex-col gap-2.5 sm:flex-row sm:items-center"
-            style={{ animationDelay: "240ms" }}
-          >
-            <Link href="/accounts" className="sm:w-auto">
-              <Button variant="primary" className="w-full sm:w-auto sm:px-6">
-                Browse accounts
-              </Button>
-            </Link>
-
-            {primarySocial && (
-              <ContactButton
-                link={primarySocial}
-                message={GENERAL_MESSAGE}
-                label={`Message us on ${socialName || "social media"}`}
-                className="sm:w-auto"
-              />
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Credentials ───────────────────────────────────────────────────── */}
-      <section
-        aria-label="What every listing comes with"
-        className="border-b border-[var(--border)] bg-surface"
-      >
-        <ul className="mx-auto grid w-full max-w-6xl grid-cols-1 px-4 sm:px-6 lg:grid-cols-3">
-          {CREDENTIALS.map((credential) => (
-            <li
-              key={credential}
-              className={[
-                "flex items-center gap-2.5 border-[var(--border)] py-4",
-                "text-[length:var(--text-sm)] font-medium text-ink",
-                "border-t first:border-t-0",
-                "lg:border-t-0 lg:border-l lg:pl-5 lg:first:border-l-0 lg:first:pl-0",
-              ].join(" ")}
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                className="size-4 shrink-0 text-accent-ink"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M2.5 8.5 6 12l7.5-8" />
-              </svg>
-              {credential}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* ── The stock ──────────────────────────────────────────────────────
-          Second, not first. The lead listing gets the lot card; anything else
-          follows in the grid. */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mb-8 flex items-end justify-between gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="display text-[length:var(--display-2)] text-ink">
-              In stock now
-            </h2>
-            <p className="text-[length:var(--text-md)] text-ink-2">
-              {catalogue.available.length === 0
-                ? "Everything is sold at the moment."
-                : catalogue.available.length === 1
-                  ? "One account, available today."
-                  : `${catalogue.available.length} accounts, available today.`}
-            </p>
-          </div>
-
-          {catalogue.available.length > 0 && (
-            <Link
-              href="/accounts"
-              className="shrink-0 pb-1 text-[length:var(--text-sm)] font-medium text-accent-ink underline-offset-4 hover:underline"
-            >
-              See all →
-            </Link>
-          )}
-        </div>
-
-        {lead ? (
-          <div className="flex flex-col gap-6">
-            <div className="w-full max-w-[34rem]">
-              <FeaturedListing account={lead} />
+              {primarySocial && (
+                <ContactButton
+                  link={primarySocial}
+                  message={GENERAL_MESSAGE}
+                  label={`Message us on ${socialName || "social media"}`}
+                  className="sm:w-auto"
+                />
+              )}
             </div>
 
-            {rest.length > 0 && (
-              <AccountGrid accounts={rest} highlightReference />
-            )}
+            {/* Three facts, set against a rule rather than in cards. The page
+                has enough rounded rectangles on it already. */}
+            <dl className="mt-2 flex w-full flex-wrap items-baseline gap-x-8 gap-y-3 border-t border-[var(--border)] pt-5">
+              {[
+                [SHOP.accountsSold, "handed over"],
+                ["< 1 hr", "reply time"],
+                ["Every listing", "fully photographed"],
+              ].map(([value, label]) => (
+                <div key={label} className="flex flex-col gap-0.5">
+                  <dt className="sr-only">{label}</dt>
+                  <dd className="display tabular text-[length:var(--display-3)] text-ink">
+                    {value}
+                  </dd>
+                  <dd className="text-[length:var(--text-sm)] text-ink-3">
+                    {label}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
-        ) : (
-          /* No stock is a real state, and the honest version of it is an
-             invitation to ask — not an empty frame. */
-          <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-surface p-8 sm:p-10">
-            <p className="display text-[length:var(--display-3)] text-ink">
-              Everything is sold right now.
-            </p>
-            <p className="mt-2 max-w-[46ch] text-[length:var(--text-md)] leading-relaxed text-ink-2">
-              New accounts are listed regularly. Message us with what you are
-              looking for — rank, skins, budget — and we will tell you when it
-              arrives.
-            </p>
 
-            {primarySocial && (
-              <ContactButton
-                link={primarySocial}
-                message={GENERAL_MESSAGE}
-                label={`Tell us what you want on ${socialName || "social media"}`}
-                className="mt-5 inline-block"
-              />
+          <div className="drift w-full max-w-[27rem] lg:max-w-none">
+            {catalogue.available.length > 0 ? (
+              <HeroShowcase accounts={catalogue.available} />
+            ) : (
+              <div className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-surface p-8">
+                <p className="display text-[length:var(--display-3)] text-ink">
+                  Everything is sold right now.
+                </p>
+                <p className="mt-2 max-w-[38ch] text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+                  New accounts are listed regularly. Tell us what you are
+                  looking for and we will let you know when it arrives.
+                </p>
+              </div>
             )}
           </div>
-        )}
+        </div>
       </section>
 
-      {/* ── How buying works ───────────────────────────────────────────────
-          Numbered because this genuinely is a sequence and the order is the
-          information: nothing is paid before step three. */}
-      <section className="border-y border-[var(--border)] bg-surface">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <h2 className="display max-w-xl text-[length:var(--display-2)] text-ink">
-            How buying works
+      {/* ── 2. The shelf ───────────────────────────────────────────────────
+          Full-bleed, and the rail runs off the right edge on purpose. */}
+      {catalogue.available.length > 0 && (
+        <section className="reveal border-b border-[var(--border)] bg-surface-2 py-14 sm:py-16">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6">
+            <div className="flex items-end justify-between gap-6">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="display text-[length:var(--display-2)] text-ink">
+                  On the shelf
+                </h2>
+                <p className="text-[length:var(--text-md)] text-ink-2">
+                  {inStock} available now.
+                </p>
+              </div>
+
+              <Link
+                href="/accounts"
+                className="shrink-0 pb-1 text-[length:var(--text-sm)] font-medium text-accent-ink underline-offset-4 hover:underline"
+              >
+                All accounts →
+              </Link>
+            </div>
+
+            <StockShelf accounts={catalogue.available} />
+          </div>
+        </section>
+      )}
+
+      {/* ── 3. The process ─────────────────────────────────────────────────
+          The one inverted band on the page. Numbers earn their place here
+          because this genuinely is a sequence: nothing is paid before step
+          three. */}
+      <section className="border-b border-[var(--accent-border)] bg-accent-fill text-on-accent-fill">
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <h2 className="display max-w-xl text-[length:var(--display-2)] text-on-accent-fill">
+            Nothing is paid until step three.
           </h2>
 
-          <ol className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-3">
+          <ol className="reveal-stagger mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-3">
             {STEPS.map((step, index) => (
               <li key={step.title} className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="display tabular text-[length:var(--display-3)] text-accent-ink">
+                  <span className="display tabular text-[length:var(--display-3)] text-on-accent-fill">
                     {index + 1}
                   </span>
-                  {/* The rule reads as a track the steps sit on, which is what
-                      makes the row a sequence at a glance rather than three
-                      unrelated columns. */}
                   <span
                     aria-hidden="true"
-                    className="h-px flex-1 bg-[var(--border)]"
+                    className="h-px flex-1 bg-[var(--on-accent-fill)] opacity-25"
                   />
                 </div>
-
-                <h3 className="text-[length:var(--text-lg)] font-semibold text-ink">
+                <h3 className="text-[length:var(--text-lg)] font-semibold text-on-accent-fill">
                   {step.title}
                 </h3>
-                <p className="max-w-[46ch] text-[length:var(--text-base)] leading-relaxed text-ink-2">
+                <p className="max-w-[42ch] text-[length:var(--text-base)] leading-relaxed text-on-accent-fill/80">
                   {step.body}
                 </p>
               </li>
@@ -318,31 +223,105 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <VouchWall vouches={WALL_VOUCHES} />
-
-      {/* ── Selling ────────────────────────────────────────────────────────
-          The one place the deep oxblood is used as a full field rather than as
-          an accent. It closes the page on brand colour and gives the second
-          audience — sellers — a hard edge to land on instead of another quiet
-          section. */}
-      <section className="border-t border-[var(--accent-border)] bg-accent-fill text-on-accent-fill">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 sm:py-16 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
-          <div className="flex flex-col gap-3">
-            <h2 className="display text-[length:var(--display-2)] text-on-accent-fill">
-              Selling instead?
+      {/* ── 4. The proof ───────────────────────────────────────────────────
+          A moving strip rather than a wall of cards. Eight comments in a grid
+          is a wall to read; eight drifting past is something you glance at and
+          believe. */}
+      {VOUCHES.length > 0 && (
+        <section className="overflow-hidden border-b border-[var(--border)] bg-bg py-14 sm:py-16">
+          <div className="mx-auto mb-8 w-full max-w-6xl px-4 sm:px-6">
+            <h2 className="display max-w-xl text-[length:var(--display-2)] text-ink">
+              What buyers said afterwards
             </h2>
-            <p className="max-w-[52ch] text-[length:var(--text-md)] leading-relaxed text-on-accent-fill/80">
-              Send us your account&apos;s details and screenshots. We value it,
-              list it properly, and deal with the buyer — you keep the account
-              until the handover.
+            <p className="mt-2 max-w-[54ch] text-[length:var(--text-md)] text-ink-2">
+              Comments from our Facebook post, by people who already went
+              through the handover.
+            </p>
+          </div>
+
+          <div className="marquee relative">
+            {/* The strip fades into the page at both ends rather than being cut
+                off by the viewport edge. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[var(--bg)] to-transparent sm:w-28"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[var(--bg)] to-transparent sm:w-28"
+            />
+
+            <ul className="marquee-track flex w-max gap-5 pl-4 sm:pl-6">
+              {/* Rendered twice so the loop has somewhere to go. The second pass
+                  is hidden from screen readers, which would otherwise read every
+                  comment on the page a second time. */}
+              {[0, 1].map((pass) => (
+                <li key={pass} aria-hidden={pass === 1} className="contents">
+                  {VOUCHES.map((vouch) => (
+                    <div
+                      key={`${pass}-${vouch.id}`}
+                      className="w-[19rem] shrink-0 sm:w-[22rem]"
+                    >
+                      <VouchCard vouch={vouch} />
+                    </div>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {SHOP.vouchPostUrl && (
+            <p className="mx-auto mt-8 w-full max-w-6xl px-4 text-[length:var(--text-sm)] text-ink-3 sm:px-6">
+              All of these are from{" "}
+              <a
+                href={SHOP.vouchPostUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-ink underline underline-offset-2 hover:no-underline"
+              >
+                our feedback post on Facebook
+              </a>
+              , posted with each person&apos;s permission.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* ── 5. The questions ───────────────────────────────────────────────
+          A sticky heading beside a scrolling index. None of the marketplaces
+          answer these on the page; they bury them in a help centre. */}
+      <section className="border-b border-[var(--border)] bg-surface-2">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <h2 className="display text-[length:var(--display-2)] text-ink">
+              Before you ask
+            </h2>
+            <p className="mt-3 max-w-[36ch] text-[length:var(--text-md)] leading-relaxed text-ink-2">
+              The things people message about most. If yours is not here, ask —
+              it is not a bother.
+            </p>
+          </div>
+
+          <Faq />
+        </div>
+      </section>
+
+      {/* ── 6. Selling ─────────────────────────────────────────────────────
+          The other audience, given the last word rather than a footnote. */}
+      <section className="bg-bg">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-16 sm:px-6 sm:py-20 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+          <div className="flex flex-col gap-3">
+            <h2 className="display max-w-[16ch] text-[length:var(--display-2)] text-ink">
+              Got an account to sell?
+            </h2>
+            <p className="max-w-[52ch] text-[length:var(--text-md)] leading-relaxed text-ink-2">
+              Send the details and screenshots. We value it, list it properly
+              and deal with the buyer — you keep the account until the handover.
             </p>
           </div>
 
           <Link href="/sell" className="shrink-0">
-            <Button
-              variant="secondary"
-              className="w-full border-transparent bg-surface text-ink hover:bg-surface-3 sm:w-auto sm:px-6"
-            >
+            <Button variant="primary" className="w-full sm:w-auto sm:px-6">
               How selling works
             </Button>
           </Link>

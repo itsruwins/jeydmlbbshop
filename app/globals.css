@@ -109,6 +109,11 @@
      control you can press; the oxblood is dark and muted and never appears on
      a destructive action. If the accent is ever brightened, this separation
      is the first thing that breaks. */
+  /* The hero wedge. Three stops so the field has an interior, not a flat fill. */
+  --wedge-1: oklch(0.16 0.045 22);
+  --wedge-2: oklch(0.24 0.09 22);
+  --wedge-3: oklch(0.3 0.11 22 / 0.55);
+
   --danger: oklch(0.58 0.2 32);
   --danger-hover: oklch(0.62 0.2 32);
   --danger-ink: oklch(0.75 0.17 32);
@@ -233,6 +238,10 @@
   --status-hidden-ink: oklch(0.46 0.04 250);
   --status-hidden-bg: oklch(0.96 0.012 250);
   --status-hidden-border: oklch(0.83 0.03 250);
+
+  --wedge-1: oklch(0.96 0.02 22);
+  --wedge-2: oklch(0.9 0.055 22);
+  --wedge-3: oklch(0.84 0.08 22 / 0.5);
 
   --danger: oklch(0.53 0.2 32);
   --danger-hover: oklch(0.47 0.2 32);
@@ -605,41 +614,198 @@ body {
   }
 }
 
-/* A hairline plate behind the hero: the ruled paper of a catalogue page, not a
-   decorative gradient. Scaled in rem so it stays crisp rather than drifting
-   with the viewport, and masked to fade before it reaches the content. */
-.plate {
-  background-image:
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 4rem 4rem;
-  -webkit-mask-image: radial-gradient(
-    120% 100% at 85% 0%,
-    black,
-    transparent 70%
+/* ==========================================================================
+   Landing page — the storefront's own devices
+
+   Deliberately not shared with the rest of the site. This page has one job and
+   a different rhythm from the catalogue or the admin, and the fastest way back
+   to a generic-looking page is to make every section reach for the same three
+   utilities.
+   ========================================================================== */
+
+/* The hero's ground: one angled oxblood field cutting in from the right.
+
+   It replaces a hairline grid and a radial wash. Both were doing the same
+   thing — softening the page so nothing had an edge — and a soft nothing is
+   what a generated page looks like. A hard diagonal is a decision. */
+.wedge {
+  background: linear-gradient(
+    108deg,
+    transparent 0%,
+    transparent 46%,
+    var(--wedge-1) 46%,
+    var(--wedge-2) 100%
   );
-  mask-image: radial-gradient(120% 100% at 85% 0%, black, transparent 70%);
 }
 
-/* A single wash of the brand oxblood behind the hero.
-
-   The one piece of atmosphere on the page, and it is doing a job: on a black
-   ground with white type, an unbroken field of pure black reads as an empty
-   document rather than a designed surface. The wash gives the top of the page
-   somewhere to come from.
-
-   Weighted per theme. On black it can be nearly at full strength and still
-   read as depth; on white the same value would be a pink stain across the
-   headline, so it drops to a tenth of it. */
-.brand-wash {
-  background: radial-gradient(
-    58rem 34rem at 82% -12%,
-    var(--accent-fill),
-    transparent 68%
+/* A second, narrower blade of light over the first, offset so the two edges do
+   not line up. One diagonal is a shape; two at slightly different angles is a
+   composition. */
+.wedge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Behind the content. Generated content is the section's last child, so
+     without this the blade painted over the product panel and drew a diagonal
+     seam straight across the price. */
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    99deg,
+    transparent 0%,
+    transparent 62%,
+    var(--wedge-3) 62%,
+    transparent 78%
   );
-  opacity: 0.62;
 }
 
-:root[data-theme="light"] .brand-wash {
-  opacity: 0.09;
+/* --------------------------------------------------------------------------
+   Entrances
+
+   Two mechanisms, because above the fold and below the fold are different
+   problems.
+
+   The hero plays once, on load, on a clock. It is already on screen; tying it
+   to scroll position means it is either finished before anyone sees it or stuck
+   part-way through while they read it.
+
+   Everything below uses a CSS scroll timeline — no IntersectionObserver, so
+   nothing runs on the main thread while scrolling, which is what keeps this
+   smooth on the mid-range Android phones most buyers arrive on.
+
+   Both resolve to the *finished* state when unsupported: `animation: … both`
+   without a duration is a zero-length animation that lands on the end keyframe,
+   so a browser without scroll timelines shows the content rather than a blank
+   section.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .enter {
+    animation: reveal-up 620ms var(--ease-out) backwards;
+  }
+
+  .enter-stagger > * {
+    animation: reveal-up 620ms var(--ease-out) backwards;
+  }
+  .enter-stagger > *:nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .enter-stagger > *:nth-child(3) {
+    animation-delay: 180ms;
+  }
+  .enter-stagger > *:nth-child(4) {
+    animation-delay: 270ms;
+  }
+
+  @supports (animation-timeline: view()) {
+    /* The range stays inside `entry` and finishes there. Running it into
+       `cover` meant an element was still at 40% opacity while it sat in the
+       middle of the screen being read — the animation only completed once the
+       visitor had scrolled past the thing it was revealing. */
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+
+    .reveal-stagger > * {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+    .reveal-stagger > *:nth-child(2) {
+      animation-range: entry 18% entry 80%;
+    }
+    .reveal-stagger > *:nth-child(3) {
+      animation-range: entry 26% entry 90%;
+    }
+    .reveal-stagger > *:nth-child(4) {
+      animation-range: entry 34% entry 100%;
+    }
+
+    /* The hero panel drifts against the scroll. Small — 2rem across a whole
+       passage — because parallax that announces itself is the tell. */
+    .drift {
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.75rem, 0);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 1.5rem, 0);
+  }
+  to {
+    transform: translate3d(0, -1.5rem, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Marquee — the vouch strip
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .marquee-track {
+    animation: marquee 64s linear infinite;
+  }
+
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The price tag
+
+   A swing tag: pointed at one end, with a hole punched through it where the
+   string would go. Both cues are silhouette rather than texture — no paper
+   grain, no fake fold, no drop shadow pretending to be a real object. The
+   shape does the work, which is what keeps it in the same language as the rest
+   of the interface instead of becoming a sticker pasted onto it.
+
+   The hole is genuinely transparent, not a circle filled with the card colour.
+   The tag straddles the screenshot, so a painted-on hole would only look like
+   a hole where the backdrop happened to match; masking it means the artwork
+   shows through wherever the tag lands.
+   -------------------------------------------------------------------------- */
+.price-tag {
+  /* The left padding has three things to clear, not one: the cut point, the
+     hole, and a gap after the hole. At 1.45rem the peso sign landed about 3px
+     from the hole's edge and the two read as one crowded object. The numbers
+     below are derived, not guessed:
+
+       point ends            0.70rem
+       hole spans      0.90 – 1.34rem  (centre 1.12, radius 0.22)
+       text starts           1.95rem   → 0.61rem of clearance
+
+     Change the hole's position or radius and this has to move with it. */
+  padding: 0.5rem 0.9rem 0.5rem 1.95rem;
+
+  /* The point. `clip-path` rules out border-radius, and that is the right
+     trade: a swing tag has cut corners, not rounded ones. */
+  clip-path: polygon(0 50%, 0.7rem 0, 100% 0, 100% 100%, 0.7rem 100%);
+
+  /* Barely larger than it looks it should be: at 1x a 2.7px radius reads as a
+     speck of dust rather than as a punched hole. */
+  --tag-hole: radial-gradient(
+    circle at 1.12rem 50%,
+    transparent 0.22rem,
+    #000 0.25rem
+  );
+  -webkit-mask-image: var(--tag-hole);
+  mask-image: var(--tag-hole);
 }
