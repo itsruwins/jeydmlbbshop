@@ -87,6 +87,13 @@ export function AdminLoginDialog() {
 
     if (open && !dialog.open) {
       dialog.showModal();
+
+      // `showModal()` focuses the first focusable descendant, which is the
+      // close button — the dialog opens with the way out selected rather than
+      // the field you came here to type in. React applies `autoFocus` by
+      // calling focus() on mount, without leaving the attribute behind for the
+      // dialog's own focusing steps to find, so the fix has to be explicit.
+      dialog.querySelector("input")?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -106,9 +113,11 @@ export function AdminLoginDialog() {
       onClick={(event) => {
         if (event.target === ref.current) close();
       }}
+      // The dialog element is only a positioning box here: no background, no
+      // border, and `overflow-visible` so the close button can hang outside
+      // the card without being clipped. The card below carries the surface.
       className={[
-        "m-auto w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-lg)] p-0",
-        "border border-[var(--border)] bg-surface text-ink shadow-[var(--shadow-dialog)]",
+        "m-auto overflow-visible bg-transparent p-0",
         "backdrop:bg-[var(--scrim)] motion-safe:animate-[pop-in_var(--dur)_var(--ease-out)]",
       ].join(" ")}
     >
@@ -117,20 +126,56 @@ export function AdminLoginDialog() {
           opening starts from a clean form rather than the last attempt's
           error. */}
       {open && (
-        <div className="flex flex-col gap-5 p-5">
-          <div className="flex flex-col gap-1">
-            <h2
-              id="admin-login-title"
-              className="text-[length:var(--text-md)] font-semibold text-ink"
-            >
-              Sign in
-            </h2>
-            <p className="text-[length:var(--text-sm)] text-ink-3">
-              Administrator access to the account catalogue.
-            </p>
-          </div>
+        <div className="relative w-[min(23rem,calc(100vw-2.5rem))]">
+          {/* Floating outside the card, on the scrim, rather than tucked into
+              a corner of it. Inside, it would compete with the form for the
+              same few square inches and read as part of it; out here it is
+              plainly the way out of the whole thing.
 
-          <LoginForm />
+              It stays inside <dialog>, so the platform's focus trap still
+              covers it — a close button that focus cannot reach is worse than
+              no close button. Escape and a backdrop click do the same job for
+              anyone who never looks up here. */}
+          <button
+            type="button"
+            onClick={close}
+            className={[
+              "absolute -top-13 right-0 grid size-11 place-items-center rounded-full",
+              "border border-[var(--border)] bg-[var(--surface-translucent)] text-ink-2 backdrop-blur-md",
+              "transition-[color,background-color,border-color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out)]",
+              "hover:border-[var(--border-strong)] hover:bg-surface-2 hover:text-ink",
+              "motion-safe:active:scale-90",
+            ].join(" ")}
+          >
+            <svg
+              viewBox="0 0 20 20"
+              className="size-[18px]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
+            </svg>
+            <span className="sr-only">Close</span>
+          </button>
+
+          <div className="flex flex-col gap-5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface p-6 text-ink shadow-[var(--shadow-dialog)]">
+            <div className="flex flex-col gap-1.5">
+              <h2
+                id="admin-login-title"
+                className="text-[length:var(--text-lg)] font-semibold tracking-[-0.005em] text-ink"
+              >
+                Sign in
+              </h2>
+              <p className="text-[length:var(--text-sm)] leading-relaxed text-ink-3">
+                Administrator access to the account catalogue.
+              </p>
+            </div>
+
+            <LoginForm />
+          </div>
         </div>
       )}
     </dialog>

@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { loginAdmin, type LoginResult } from "@/functions/auth/loginAdmin";
 
 /** Split out so `useFormStatus` reads the state of the enclosing form. */
@@ -46,8 +47,22 @@ export function LoginForm({
       {error && (
         <p
           role="alert"
-          className="rounded-[var(--radius)] border border-[var(--danger-border)] bg-danger-bg px-3.5 py-3 text-[length:var(--text-sm)] text-danger-ink"
+          className="flex items-start gap-2 rounded-[var(--radius)] border border-[var(--danger-border)] bg-danger-bg px-3.5 py-3 text-[length:var(--text-sm)] leading-relaxed text-danger-ink"
         >
+          <svg
+            viewBox="0 0 20 20"
+            className="mt-px size-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="10" cy="10" r="7.2" />
+            <path d="M10 6.4v4.2" />
+            <path d="M10 13.4h.01" />
+          </svg>
           {error}
         </p>
       )}
@@ -66,10 +81,9 @@ export function LoginForm({
       </Field>
 
       <Field id="password" label="Password" required>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           invalid={Boolean(error)}
