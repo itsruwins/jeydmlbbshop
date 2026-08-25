@@ -4,6 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import {
+  CrownIcon,
+  FrameIcon,
+  GemIcon,
+  HeroIcon,
+  SparkIcon,
+} from "@/components/home/specIcons";
 import { cn } from "@/lib/utils/cn";
 import { formatCount, formatPrice } from "@/lib/utils/format";
 import { imagePublicUrl } from "@/lib/utils/imagePublicUrl";
@@ -65,20 +72,13 @@ export function HeroShowcase({
   const account = accounts[Math.min(index, accounts.length - 1)];
   const cover = coverImage(account);
 
-  /* Skins, heroes, and how many screenshots back the listing up.
+  /* How many screenshots back the listing up.
 
-     The third one is the point. Every marketplace quotes skins and heroes;
-     none of them tell you how much of the account you can actually see before
-     paying, which is this shop's whole argument. It is also live — it counts
-     the images that exist, so it cannot drift from the truth. */
-  const metrics = [
-    { value: formatCount(account.skin_count), label: "skins" },
-    { value: formatCount(account.hero_count), label: "heroes" },
-    {
-      value: formatCount(account.images?.length ?? 0),
-      label: (account.images?.length ?? 0) === 1 ? "screenshot" : "screenshots",
-    },
-  ];
+     Every marketplace quotes skins and heroes; none of them tell you how much
+     of the account you can actually see before paying, which is this shop's
+     whole argument. It is also live — it counts the images that exist, so it
+     cannot drift from the truth. */
+  const shotCount = account.images?.length ?? 0;
 
   return (
     <div
@@ -117,63 +117,126 @@ export function HeroShowcase({
             </div>
           )}
 
-          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-[oklch(0_0_0/0.6)] to-transparent p-3">
-            <span className="rounded-[var(--radius-sm)] bg-[oklch(1_0_0/0.94)] px-2 py-1 font-mono text-[length:var(--text-sm)] font-medium leading-none text-[oklch(0.18_0_0)]">
+          {/* The nameplate and the stock mark, in the shelf tile's material.
+
+              Both were white chips: the loudest thing in the fold, and a
+              colour that belongs to the screenshots rather than to this site,
+              so they read as browser affordances pasted over the artwork. The
+              reference now takes the same oxblood plate the shelf gives it —
+              --accent-fill is the token for a filled plate that is not a
+              status and not a control — with the lit --accent as its border,
+              because on a dark frame of a screenshot a deep plate and a deep
+              border disappear together.
+
+              "In stock" is the one thing here that is not the shop's own
+              voice, so it stays neutral: smoked glass over the picture,
+              quieter than the plate opposite it. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[oklch(0_0_0/0.5)] to-transparent"
+          />
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+            <span className="rounded-[var(--radius-sm)] border border-accent/45 bg-accent-fill px-2 py-1 font-mono text-[length:var(--text-sm)] font-semibold leading-none tracking-[0.02em] text-on-accent-fill shadow-[0_1px_8px_oklch(0_0_0/0.45)]">
               {account.account_reference}
             </span>
-            <span className="rounded-full bg-[oklch(1_0_0/0.94)] px-2.5 py-1 text-[length:var(--text-xs)] font-medium leading-[1.4] text-[oklch(0.18_0_0)]">
+            <span className="rounded-full border border-[oklch(1_0_0/0.22)] bg-[oklch(0_0_0/0.5)] px-2.5 py-1 text-[length:var(--text-xs)] font-medium leading-[1.4] text-[oklch(0.98_0_0)] backdrop-blur-sm">
               In stock
             </span>
           </div>
         </div>
 
         <div className="flex flex-col gap-4 p-5 sm:p-6">
-          {/* What this account *is*, before what it costs. Rank and collection
-              level are the two things a buyer compares between listings, so
-              they read as the product's name rather than as two more rows in a
-              specification table. */}
-          <p className="text-[length:var(--text-sm)] font-medium text-accent-ink">
-            {account.rank?.name ?? "Unranked"}
-            {account.collection_level && (
-              <span className="text-ink-3"> · {account.collection_level.name}</span>
-            )}
-          </p>
+          {/* The price as a swing tag, the way the shelf sets it, pulled up
+              over the artwork by a negative margin rather than positioned
+              inside it: the image sits in an overflow-hidden box for the hover
+              zoom, so anything hanging off its bottom edge would be clipped.
 
-          <p className="display tabular -mt-1 text-[length:var(--display-2)] leading-none text-ink">
+              `relative z-10` is load-bearing. The image box is positioned and
+              this one is not, so without it the image paints on top and cuts
+              the price in half. The pull is tied to this card's padding — 1.25
+              then 1.5rem — so roughly half the tag hangs below the image at
+              both widths. Change the padding and this moves with it. */}
+          <span className="price-tag display tabular relative z-10 -mt-12 mb-1 w-fit bg-accent-fill text-[length:var(--display-2)] leading-none text-on-accent-fill sm:-mt-14">
             {formatPrice(account.price)}
-          </p>
+          </span>
 
-          {/* A divided metric row rather than four label-and-value pairs. The
-              numbers lead and the words follow, because the number is what is
-              being compared — set the other way round it reads as a form. */}
-          <dl className="grid grid-cols-3 border-y border-[var(--border)]">
-            {metrics.map((metric, index) => (
-              <div
-                key={metric.label}
-                className={cn(
-                  "flex flex-col gap-0.5 py-3",
-                  index > 0 && "border-l border-[var(--border)] pl-4",
-                )}
-              >
-                <dd className="tabular text-[length:var(--text-lg)] font-semibold leading-none text-ink">
-                  {metric.value}
-                </dd>
-                <dt className="text-[length:var(--text-xs)] text-ink-3">
-                  {metric.label}
-                </dt>
-              </div>
-            ))}
-          </dl>
+          {/* The specification, each fact anchored by a mark — the shelf tile's
+              list rather than the divided metric row that used to sit here.
+              That row set three numbers in three bordered cells and left rank
+              and collection level stranded above the price as a separate line
+              of accent text, so one card carried two different ways of stating
+              a fact. This is one way, and it is the same one the shelf uses.
 
-          {/* The action, at the size of an action. It was a small link floating
-              to the right of a 42px price, which read as a footnote rather than
-              as the way into the listing.
+              A list rather than a `<dl>`: the metrics need to sit several to a
+              row, and `dl` only permits `dt`/`dd`/`div` as children. The hidden
+              labels carry what the icons cannot say. */}
+          <ul className="flex flex-col gap-2.5 text-[length:var(--text-md)]">
+            <li className="flex items-center gap-2.5">
+              <CrownIcon />
+              <span className="sr-only">Rank:</span>
+              <span className="truncate font-medium text-ink">
+                {account.rank?.name ?? "Unranked"}
+              </span>
+            </li>
+
+            {account.collection_level && (
+              <li className="flex items-center gap-2.5">
+                <GemIcon />
+                <span className="sr-only">Collection level:</span>
+                <span className="truncate font-medium text-ink">
+                  {account.collection_level.name}
+                </span>
+              </li>
+            )}
+
+            {/* Skins, heroes and the screenshot count share a row: they are the
+                numbers a buyer reads together, and stacking them would make
+                six lines out of three facts. */}
+            <li className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
+              <span className="flex items-center gap-2.5">
+                <SparkIcon />
+                <span className="text-ink-3">
+                  <span className="tabular font-medium text-ink">
+                    {formatCount(account.skin_count)}
+                  </span>{" "}
+                  skins
+                </span>
+              </span>
+
+              {account.hero_count !== null && (
+                <span className="flex items-center gap-2.5">
+                  <HeroIcon />
+                  <span className="text-ink-3">
+                    <span className="tabular font-medium text-ink">
+                      {formatCount(account.hero_count)}
+                    </span>{" "}
+                    heroes
+                  </span>
+                </span>
+              )}
+
+              <span className="flex items-center gap-2.5">
+                <FrameIcon />
+                <span className="text-ink-3">
+                  <span className="tabular font-medium text-ink">
+                    {formatCount(shotCount)}
+                  </span>{" "}
+                  {shotCount === 1 ? "screenshot" : "screenshots"}
+                </span>
+              </span>
+            </li>
+          </ul>
+
+          {/* The action, at the size of an action. The shelf tile keeps its
+              equivalent quiet until hover because there are three of them on
+              screen at once; this is the only one in the fold and the page's
+              way in, so it stays filled.
 
               A span, not a button: the whole card is already one link, and a
               button inside an anchor is invalid and unreachable by keyboard. */}
           <span
             className={cn(
-              "flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius)]",
+              "mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius)]",
               "bg-primary text-[length:var(--text-base)] font-medium text-on-primary",
               "transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]",
               "group-hover:bg-primary-hover",

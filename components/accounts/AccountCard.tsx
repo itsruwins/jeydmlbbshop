@@ -1,21 +1,11 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { ScreenshotCarousel } from "@/components/accounts/ScreenshotCarousel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { orderedImages } from "@/lib/utils/accountImages";
 import { cn } from "@/lib/utils/cn";
 import { formatCount, formatPrice } from "@/lib/utils/format";
-import { imagePublicUrl } from "@/lib/utils/imagePublicUrl";
 import type { AccountWithRelations } from "@/types/account";
-
-/** The cover, or the first image, or nothing. */
-function coverImage(account: AccountWithRelations) {
-  const images = account.images ?? [];
-  return (
-    images.find((image) => image.is_cover) ??
-    [...images].sort((a, b) => a.display_order - b.display_order)[0] ??
-    null
-  );
-}
 
 /**
  * One listing in a grid.
@@ -34,6 +24,12 @@ function coverImage(account: AccountWithRelations) {
  * Sold and reserved cards are dimmed rather than removed. They are the evidence
  * that sales actually happen here, which a new shop has little other way to
  * show. The dimming is lifted on hover so the details stay readable.
+ *
+ * The frame is browsable in place — the same carousel the homepage shelf uses,
+ * so a buyer who learned it there does not meet a different card here. It is
+ * why the card is an `article` with two links inside rather than one link
+ * wrapped around everything: the arrows are buttons, and a button inside an
+ * anchor is invalid and unreachable by keyboard.
  */
 export function AccountCard({
   account,
@@ -49,47 +45,34 @@ export function AccountCard({
    */
   highlightReference?: boolean;
 }) {
-  const cover = coverImage(account);
+  const images = orderedImages(account.images);
+  const href = `/accounts/${account.account_reference}`;
   const isClosed = account.status !== "available";
 
   return (
-    <Link
-      href={`/accounts/${account.account_reference}`}
+    <article
       className={cn(
-        "group flex w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface",
+        "group relative flex w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface",
         "transition-[border-color,transform] duration-[var(--dur)] ease-[var(--ease-out)]",
         "hover:border-[var(--border-strong)] motion-safe:hover:-translate-y-0.5",
       )}
     >
-      <div
-        className={cn(
-          "relative aspect-[16/10] overflow-hidden bg-surface-3",
-          isClosed && "opacity-60 transition-opacity group-hover:opacity-100",
-        )}
+      <ScreenshotCarousel
+        images={images}
+        href={href}
+        label={account.account_reference}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        priority={priority}
+        dimmed={isClosed}
       >
-        {cover ? (
-          <Image
-            src={imagePublicUrl(cover.storage_path)}
-            alt={cover.alt_text ?? `Account ${account.account_reference} screenshot`}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={priority}
-            className="object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out)] motion-safe:group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-[length:var(--text-sm)] text-ink-3">
-            No screenshot yet
-          </div>
-        )}
-
         {isClosed && (
-          <div className="absolute left-3 top-3">
+          <div className="pointer-events-none absolute left-3 top-3 z-20">
             <StatusBadge status={account.status} />
           </div>
         )}
-      </div>
+      </ScreenshotCarousel>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-3.5">
+      <Link href={href} className="flex flex-1 flex-col gap-2.5 p-3.5">
         {/* On the featured wall the reference is the listing's name, not a
             footnote: it is what a buyer quotes back when they message, and
             with no title on the card there is nothing else identifying it.
@@ -165,7 +148,7 @@ export function AccountCard({
           )}
         </dl>
 
-      </div>
-    </Link>
+      </Link>
+    </article>
   );
 }

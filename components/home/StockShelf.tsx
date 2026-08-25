@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { formatCount, formatPrice } from "@/lib/utils/format";
@@ -8,18 +7,9 @@ import {
   HeroIcon,
   SparkIcon,
 } from "@/components/home/specIcons";
-import { imagePublicUrl } from "@/lib/utils/imagePublicUrl";
+import { ScreenshotCarousel } from "@/components/accounts/ScreenshotCarousel";
+import { orderedImages } from "@/lib/utils/accountImages";
 import type { AccountWithRelations } from "@/types/account";
-
-/** The cover, or the first image, or nothing. */
-function coverImage(account: AccountWithRelations) {
-  const images = account.images ?? [];
-  return (
-    images.find((image) => image.is_cover) ??
-    [...images].sort((a, b) => a.display_order - b.display_order)[0] ??
-    null
-  );
-}
 
 /**
  * Everything available, as a shelf of products.
@@ -45,8 +35,14 @@ function coverImage(account: AccountWithRelations) {
  * dividers between the numbers and a bordered button at the bottom. A box inside
  * a box inside a box.
  *
- * What is left below the image is a two-line identity and one line of numbers.
- * The screenshot count is gone: it was a metric invented to fill a third column
+ * The frame is browsable in place: one shop's argument is that every listing is
+ * photographed end to end, and a shelf that shows one screenshot per account is
+ * making that argument with the evidence hidden one click away. See
+ * `ScreenshotCarousel` for how the controls are split between a pointer that
+ * can hover and a thumb that can swipe.
+ *
+ * What is left below the image is a two-line identity and the numbers. The
+ * screenshot count is gone: it was a metric invented to fill a third column
  * that no longer exists.
  */
 export function StockShelf({ accounts }: { accounts: AccountWithRelations[] }) {
@@ -55,30 +51,22 @@ export function StockShelf({ accounts }: { accounts: AccountWithRelations[] }) {
   return (
     <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {accounts.map((account) => {
-        const cover = coverImage(account);
+        const images = orderedImages(account.images);
+        const href = `/accounts/${account.account_reference}`;
         return (
           <li key={account.id} className="flex">
-            <Link
-              href={`/accounts/${account.account_reference}`}
-              className="group flex w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface transition-[border-color,transform] duration-[var(--dur)] ease-[var(--ease-out)] hover:border-[var(--border-strong)] motion-safe:hover:-translate-y-1"
-            >
-              <div className="relative aspect-[16/10] overflow-hidden bg-surface-3">
-                {cover ? (
-                  <Image
-                    src={imagePublicUrl(cover.storage_path)}
-                    alt={
-                      cover.alt_text ?? `Account ${account.account_reference}`
-                    }
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
-                    className="object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out)] motion-safe:group-hover:scale-[1.04]"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-[length:var(--text-sm)] text-ink-3">
-                    No screenshot yet
-                  </div>
-                )}
-
+            {/* An `article` rather than one big `Link`. The frame now holds
+                its own controls, and a button inside an anchor is invalid and
+                unreachable by keyboard — so the tile stopped being a single
+                link and became a card with two ways in: the screenshot and the
+                button under it, both pointing at the same listing. */}
+            <article className="group relative flex w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface transition-[border-color,transform] duration-[var(--dur)] ease-[var(--ease-out)] hover:border-[var(--border-strong)] motion-safe:hover:-translate-y-1">
+              <ScreenshotCarousel
+                images={images}
+                href={href}
+                label={account.account_reference}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
+              >
                 {/* The reference, as the tile's nameplate.
 
                     It is the only thing on the tile that identifies *this*
@@ -103,15 +91,19 @@ export function StockShelf({ accounts }: { accounts: AccountWithRelations[] }) {
                     The border is --accent, the lit value, not --accent-border:
                     on a dark frame of a screenshot the deep plate and the deep
                     border both disappear and the chip loses its edge. The scrim
-                    covers the opposite case, a pale frame. */}
+                    covers the opposite case, a pale frame.
+
+                    Both are `pointer-events-none`: the slide underneath is the
+                    link, and a plate that swallows the tap would leave a dead
+                    corner on the picture. */}
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[oklch(0_0_0/0.45)] to-transparent"
                 />
-                <span className="absolute left-3 top-3 rounded-[var(--radius-sm)] border border-accent/45 bg-accent-fill px-2 py-1 font-mono text-[length:var(--text-sm)] font-semibold leading-none tracking-[0.02em] text-on-accent-fill shadow-[0_1px_8px_oklch(0_0_0/0.45)]">
+                <span className="pointer-events-none absolute left-3 top-3 rounded-[var(--radius-sm)] border border-accent/45 bg-accent-fill px-2 py-1 font-mono text-[length:var(--text-sm)] font-semibold leading-none tracking-[0.02em] text-on-accent-fill shadow-[0_1px_8px_oklch(0_0_0/0.45)]">
                   {account.account_reference}
                 </span>
-              </div>
+              </ScreenshotCarousel>
 
               <div className="flex flex-1 flex-col gap-3 p-4">
                 {/* The tag. Pulled up over the image by a negative margin
@@ -126,12 +118,18 @@ export function StockShelf({ accounts }: { accounts: AccountWithRelations[] }) {
                   {formatPrice(account.price)}
                 </span>
 
-                {/* Four facts, each anchored by a mark.
+                {/* Four facts, each anchored by a mark, one to a line.
 
-                    A list rather than a `<dl>`: the metrics need to sit two to
-                    a row, and `dl` only permits `dt`/`dd`/`div` as children, so
-                    laying them out that way meant nesting divs it does not
-                    allow. The hidden labels carry what the icons cannot say. */}
+                    Skins and heroes shared a row until the marks gave that away
+                    as a compromise: the hero icon started wherever the skin
+                    number happened to end, so it landed in a different place on
+                    every tile and read as debris rather than as a column. One
+                    fact per line puts all four marks on a single left edge, and
+                    the tile is one line taller for it.
+
+                    A list rather than a `<dl>`: `dl` only permits `dt`/`dd`/
+                    `div` as children, and the marks need a wrapper each. The
+                    hidden labels carry what the icons cannot say. */}
                 <ul className="flex flex-col gap-2 text-[length:var(--text-sm)]">
                   <li className="flex items-center gap-2">
                     <CrownIcon />
@@ -151,48 +149,48 @@ export function StockShelf({ accounts }: { accounts: AccountWithRelations[] }) {
                     </li>
                   )}
 
-                  {/* Skins and heroes share a row: they are the pair a buyer
-                      reads together, and stacking them would make a four-line
-                      list out of two facts. */}
-                  <li className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                    <span className="flex items-center gap-2">
-                      <SparkIcon />
+                  <li className="flex items-center gap-2">
+                    <SparkIcon />
+                    <span className="text-ink-3">
+                      <span className="tabular font-medium text-ink">
+                        {formatCount(account.skin_count)}
+                      </span>{" "}
+                      skins
+                    </span>
+                  </li>
+
+                  {account.hero_count !== null && (
+                    <li className="flex items-center gap-2">
+                      <HeroIcon />
                       <span className="text-ink-3">
                         <span className="tabular font-medium text-ink">
-                          {formatCount(account.skin_count)}
+                          {formatCount(account.hero_count)}
                         </span>{" "}
-                        skins
+                        heroes
                       </span>
-                    </span>
-
-                    {account.hero_count !== null && (
-                      <span className="flex items-center gap-2">
-                        <HeroIcon />
-                        <span className="text-ink-3">
-                          <span className="tabular font-medium text-ink">
-                            {formatCount(account.hero_count)}
-                          </span>{" "}
-                          heroes
-                        </span>
-                      </span>
-                    )}
-                  </li>
+                    </li>
+                  )}
                 </ul>
 
-                {/* A span rather than a button: the tile is already one link,
-                    and a button inside an anchor is invalid and unreachable by
-                    keyboard. This is the affordance, not the control. */}
-                <span className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-surface-3 text-[length:var(--text-sm)] font-medium text-ink transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)] group-hover:bg-accent-fill group-hover:text-on-accent-fill">
+                {/* The tile's keyboard route in, and the only part of it in the
+                    tab order — the slides are deliberately not. The reference
+                    rides along unseen so that a screen reader hears which
+                    account this button belongs to. */}
+                <Link
+                  href={href}
+                  className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-surface-3 text-[length:var(--text-sm)] font-medium text-ink transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)] group-hover:bg-accent-fill group-hover:text-on-accent-fill"
+                >
                   View account
+                  <span className="sr-only">{account.account_reference}</span>
                   <span
                     aria-hidden="true"
                     className="transition-transform duration-[var(--dur)] ease-[var(--ease-out)] motion-safe:group-hover:translate-x-0.5"
                   >
                     →
                   </span>
-                </span>
+                </Link>
               </div>
-            </Link>
+            </article>
           </li>
         );
       })}

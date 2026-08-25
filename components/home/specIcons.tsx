@@ -60,3 +60,19 @@ export function HeroIcon() {
     </svg>
   );
 }
+
+/**
+ * How many screenshots back the listing up.
+ *
+ * Only the hero panel uses it — the shelf tile dropped that metric — but it is
+ * drawn here so the five marks stay one set at one stroke weight.
+ */
+export function FrameIcon() {
+  return (
+    <svg {...base}>
+      <rect x="2.8" y="4.4" width="14.4" height="11.2" rx="2.2" />
+      <path d="M2.9 12.4 6.9 8.8l3.6 3.2 2.2-1.9 4.4 3.8" />
+      <circle cx="12.7" cy="8.1" r="1.1" />
+    </svg>
+  );
+}

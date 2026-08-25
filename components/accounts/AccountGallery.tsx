@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
+import { orderedImages } from "@/lib/utils/accountImages";
 import { cn } from "@/lib/utils/cn";
 import { imagePublicUrl } from "@/lib/utils/imagePublicUrl";
 import type { AccountImage } from "@/types/accountImage";
@@ -27,11 +28,7 @@ export function AccountGallery({
   /** What to call this listing in alt text — its reference. */
   label: string;
 }) {
-  const ordered = [...images].sort((a, b) => {
-    // Cover first, then gallery order.
-    if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1;
-    return a.display_order - b.display_order;
-  });
+  const ordered = orderedImages(images);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const active = ordered[activeIndex];
