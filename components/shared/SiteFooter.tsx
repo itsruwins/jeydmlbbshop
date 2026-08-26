@@ -26,7 +26,7 @@ export async function SiteFooter() {
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-surface-2">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="shell flex flex-col gap-6 px-4 py-8 sm:px-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
           {/* The wordmark alone. On a page that opens with the same name in the
               header, a description underneath it is the third telling. */}

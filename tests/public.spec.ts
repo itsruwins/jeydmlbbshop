@@ -1,4 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/**
+ * The filter rail, as opposed to the row of removable tokens above the results.
+ *
+ * Both hold a button per active filter and both are reachable by role, so a
+ * bare `getByRole("button", { name: "50+" })` matches two things. Scoping says
+ * which one a test means: the rail applies a filter, a token takes it off.
+ */
+const rail = (page: Page) =>
+  page.getByRole("complementary").filter({ has: page.getByRole("heading", { name: "Filters" }) });
 
 test.describe("public marketplace", () => {
   test("homepage leads with inventory and both paths", async ({ page }) => {
@@ -68,10 +78,16 @@ test.describe("public marketplace", () => {
     await page.getByLabel("Minimum price").blur();
     await expect(page).toHaveURL(/[?&]min_price=1000/);
 
-    await page.getByRole("button", { name: "100+" }).click();
+    // Every option in the rail carries its own count, so a chip's accessible
+    // name is "100+ 3" rather than "100+". Scoped to the rail because the
+    // active-filter row above the results holds a button for the same filter,
+    // there to take it off again.
+    await rail(page).getByRole("button", { name: /^100\+/ }).click();
     await expect(page).toHaveURL(/[?&]min_skins=100/);
 
-    await page.getByLabel("Minimum collection level").selectOption({ index: 1 });
+    // Collection level is a ladder of tier heads now, not a select: each rung
+    // is "this tier and above".
+    await rail(page).getByRole("button", { name: /^Junior Collector/ }).click();
     await expect(page).toHaveURL(/[?&]min_collection=/);
   });
 
@@ -79,10 +95,23 @@ test.describe("public marketplace", () => {
     await page.goto("/accounts?sort=price_desc&min_skins=50");
 
     await expect(page.getByLabel("Sort accounts")).toHaveValue("price_desc");
-    await expect(page.getByRole("button", { name: "50+" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(
+      rail(page).getByRole("button", { name: /^50\+/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("an applied filter can be taken off one at a time", async ({ page }) => {
+    await page.goto("/accounts?min_skins=50&sort=price_desc");
+
+    // The token above the results, not the chip in the rail.
+    await page
+      .getByRole("button", { name: /^Remove filter: 50\+ skins/ })
+      .click();
+
+    await expect(page).not.toHaveURL(/min_skins/);
+    // Taking one filter off leaves the others alone — that is the whole reason
+    // the tokens exist beside a "Clear all" that already worked.
+    await expect(page).toHaveURL(/sort=price_desc/);
   });
 
   test("impossible filters show a recovery path, not a blank page", async ({

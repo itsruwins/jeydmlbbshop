@@ -7,8 +7,13 @@ import { getCollectionLevels } from "@/functions/collectionLevels/getCollectionL
 import { getRanks } from "@/functions/ranks/getRanks";
 
 import { AccountGrid } from "./AccountGrid";
-import { MarketplaceFilters } from "./MarketplaceFilters";
-import { hasActiveFilters, type CatalogueParams } from "./filterParams";
+import { CatalogueShell } from "./CatalogueShell";
+import { buildFacets } from "./facets";
+import {
+  filterSignature,
+  hasActiveFilters,
+  type CatalogueParams,
+} from "./filterParams";
 
 /**
  * The catalogue's data and results.
@@ -23,10 +28,25 @@ import { hasActiveFilters, type CatalogueParams } from "./filterParams";
  * rendered the right page under a 200 instead of a 404: a soft 404 on exactly
  * the URLs that get shared on social media and crawled. Keeping the boundary in
  * here means the detail route streams nothing before it knows the answer.
+ *
+ * ## The second catalogue query
+ *
+ * Two reads of the same table, and both are wanted. The first is the filtered
+ * view — ordered and narrowed by Postgres, which is where that work belongs.
+ * The second is the whole public catalogue, unfiltered, and it exists so the
+ * filter rail can say how many listings each *unchosen* option would return.
+ * That number cannot be derived from the filtered set: it is by definition
+ * about rows the filters have already excluded. See `facets.ts`.
+ *
+ * It is a second round trip to a table holding a few dozen rows, both are
+ * anonymous reads, and the page is cached — so the honest cost is a few
+ * milliseconds once every revalidation window. If the shop ever holds thousands
+ * of listings this is the thing to fold into a single aggregate query.
  */
 export async function CatalogueResults({ params }: { params: CatalogueParams }) {
-  const [catalogue, ranks, collectionLevels] = await Promise.all([
+  const [catalogue, all, ranks, collectionLevels] = await Promise.all([
     getPublicAccounts(params),
+    getPublicAccounts(),
     getRanks(),
     getCollectionLevels(),
   ]);
@@ -35,18 +55,28 @@ export async function CatalogueResults({ params }: { params: CatalogueParams }) 
   const total = available.length + closed.length;
   const filtered = hasActiveFilters(params);
 
-  return (
-    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
-      <div className="contents lg:block">
-        <MarketplaceFilters
-          params={params}
-          ranks={ranks}
-          collectionLevels={collectionLevels}
-          resultCount={total}
-        />
-      </div>
+  const facets = buildFacets({
+    all: [...all.available, ...all.closed],
+    params,
+    ranks,
+    collectionLevels,
+  });
 
-      <div className="flex min-w-0 flex-col gap-8 lg:col-start-2 lg:row-start-1">
+  return (
+    <CatalogueShell params={params} facets={facets} resultCount={total}>
+      {/* Keyed on the filters, and only this subtree.
+
+          A key here remounts the grid, which is what makes the cards animate
+          in rather than being swapped between two frames — a filter change
+          that removes two of eight near-identical screenshots is otherwise
+          genuinely hard to notice.
+
+          It must not go any higher. Keying the Suspense boundary restarts it on
+          every change and remounts everything inside, including the filter
+          controls: on a phone that closed the sheet after a single tap, so only
+          one filter could be applied per open. Keying here leaves the rail, the
+          sheet and the search box untouched. */}
+      <div key={filterSignature(params)} className="flex flex-col gap-8">
         {total === 0 ? (
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface">
             {filtered ? (
@@ -101,6 +131,6 @@ export async function CatalogueResults({ params }: { params: CatalogueParams }) 
           </>
         )}
       </div>
-    </div>
+    </CatalogueShell>
   );
 }

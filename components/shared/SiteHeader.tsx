@@ -37,7 +37,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-[var(--border)] bg-[var(--surface-translucent)] backdrop-blur-xl backdrop-saturate-150">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
+      <div className="shell flex h-14 items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
         {/* The wordmark splits at `sm`: a phone gets the short form so the
             name never competes with the navigation for the same 40px. */}
         <Link
@@ -64,7 +64,10 @@ export function SiteHeader() {
                     // min-h-11 is 44px: the minimum a thumb hits reliably. These
                     // are the only navigation on a phone, so they have to be
                     // comfortable rather than merely clickable.
-                    "flex min-h-11 items-center whitespace-nowrap rounded-[var(--radius)] px-2.5 text-[length:var(--text-sm)]",
+                    // min-w-11 too: on a phone the short label is "Sell", which at
+                    // px-2.5 measured 43px across. A target is 44 in *both*
+                    // directions or it is not 44.
+                    "flex min-h-11 min-w-11 items-center justify-center whitespace-nowrap rounded-[var(--radius)] px-2.5 text-[length:var(--text-sm)]",
                     "transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]",
                     current
                       ? "font-medium text-ink"

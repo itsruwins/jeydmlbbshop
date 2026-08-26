@@ -397,6 +397,37 @@ body {
   color: var(--ink);
 }
 
+/* ==========================================================================
+   The shell — one measure for the header, the page and the footer
+   ========================================================================== */
+
+/* Every full-width band on the storefront centres its contents in a `.shell`,
+   so the wordmark, the page heading and the footer all sit on the same two
+   vertical lines.
+
+   The measure is a variable rather than a fixed width, because one page needs a
+   wider one. A catalogue is a grid of products and a grid wants columns: at
+   72rem the browse page fits two of them beside its filter rail and leaves a
+   third of a desktop viewport black on either side. That reads as a page that
+   has been squeezed rather than composed.
+
+   Widening only the grid would break the alignment the shell exists to keep —
+   the header would then sit visibly narrower than the content beneath it. So
+   the page asks for the wider measure and the header and footer follow it, via
+   `:has()` rather than by knowing which route is on screen. A page opts in by
+   marking its own container `data-shell="wide"`; no component has to import a
+   pathname to lay itself out, and nothing has to be kept in step with a list of
+   wide routes. */
+.shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--shell, 72rem);
+}
+
+body:has([data-shell="wide"]) {
+  --shell: 100rem;
+}
+
 /* Expands a control's tap area to the 44px minimum without changing its
    size on screen.
    
@@ -878,5 +909,144 @@ body {
 @keyframes mop-crawl {
   to {
     transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* ==========================================================================
+   Catalogue — the browse page's own devices
+
+   The filter rail is the one place on the site where a control has to report a
+   *distribution* rather than a value, so it gets two things nothing else needs:
+   a range track with two thumbs on it, and a histogram behind that track.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The price range
+
+   Two `<input type="range">` stacked in the same box, which is the only way to
+   build a two-ended range that a keyboard can still drive: each end stays a
+   real, focusable, arrow-key-able slider with its own accessible name, and the
+   browser handles the dragging. A single custom-built control with two divs
+   would look identical and be unreachable without a mouse.
+
+   The cost of stacking them is that the upper input's dead track would swallow
+   every press aimed at the lower one, so the inputs are transparent to the
+   pointer and only their thumbs are given it back. The track the eye sees is a
+   plain div underneath, which also means the filled segment between the two
+   values can be drawn at all — a native track cannot be painted in two colours.
+   -------------------------------------------------------------------------- */
+.range-stack input[type="range"] {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* The element keeps the site-wide focus ring — it is a real control and
+   stripping its outline would leave a keyboard with nothing to follow. But the
+   two inputs occupy the same box, so that ring cannot say *which* end is
+   focused; the thumb ring below is what answers that, and the two together are
+   the indicator. */
+.range-stack input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.45);
+  cursor: grab;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.range-stack input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.45);
+  cursor: grab;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.range-stack input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.range-stack input[type="range"]:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .range-stack input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+
+  .range-stack input[type="range"]:active::-moz-range-thumb {
+    transform: scale(1.12);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Results settling in
+
+   A filter change that swaps one grid for another with no motion between them
+   is indistinguishable from a page that did nothing — especially here, where
+   the cards are near-identical screenshots and the only visible difference may
+   be that there are now six instead of eight.
+
+   The stagger is capped in the component rather than written out as nth-child
+   rules: the delay is an inline custom property, so a grid of thirty cards
+   costs thirty numbers instead of thirty selectors, and the last card still
+   arrives inside a third of a second.
+
+   Backwards fill, and no `.card-in` state that differs from the finished one:
+   if the animation never runs, the card is already where it belongs.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .card-in {
+    animation: card-in 320ms var(--ease-out) backwards;
+    animation-delay: var(--card-delay, 0ms);
+  }
+
+  .count-roll {
+    animation: count-roll 260ms var(--ease-out);
+  }
+}
+
+/* Translate and fade only — deliberately no `scale`.
+
+   A scaled element reports a scaled `getBoundingClientRect()`, so for the
+   third of a second this runs, every tap target inside a card measures ~1.5%
+   short of its real size. That is invisible to a user and fatal to anything
+   that checks geometry: the 44px touch-target test failed intermittently on
+   the card's own button, depending on whether it happened to sample mid-flight.
+   The lift and the fade carry the entrance on their own. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.5rem, 0);
+  }
+}
+
+/* The result total is a number that changes in place, and a number that
+   changes in place is the easiest thing on a page to miss. It lifts rather
+   than fades: the direction says "this was just replaced". */
+@keyframes count-roll {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.3rem, 0);
   }
 }

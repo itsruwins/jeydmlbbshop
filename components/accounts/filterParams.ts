@@ -120,3 +120,60 @@ export function countActiveFilters(params: CatalogueParams): number {
     params.minSkins !== undefined,
   ].filter(Boolean).length;
 }
+
+/** The empty filter state, keeping the sort the buyer already chose. */
+export function clearedFilters(params: CatalogueParams): CatalogueParams {
+  return {
+    search: "",
+    rankIds: [],
+    minPrice: undefined,
+    maxPrice: undefined,
+    minCollectionSort: undefined,
+    minSkins: undefined,
+    sort: params.sort,
+  };
+}
+
+/**
+ * A stable string that changes whenever the *result set or its order* changes.
+ *
+ * The catalogue keys its grid on this so that a filter change remounts the
+ * cards and they animate in rather than being swapped between two frames. It
+ * has to be order-independent per dimension — `?rank=a&rank=b` and
+ * `?rank=b&rank=a` are the same view and must not re-run the animation — which
+ * is why the rank ids are sorted rather than joined as they arrive.
+ *
+ * Sort is part of it. Re-sorting keeps every card and changes only where each
+ * one sits, which is precisely the change that is invisible without motion.
+ */
+export function filterSignature(params: CatalogueParams): string {
+  return [
+    params.search,
+    [...params.rankIds].sort().join(","),
+    params.minPrice ?? "",
+    params.maxPrice ?? "",
+    params.minCollectionSort ?? "",
+    params.minSkins ?? "",
+    params.sort,
+  ].join("|");
+}
+
+/** Serialises the filter state back into the query string it came from. */
+export function toSearchParams(params: CatalogueParams): URLSearchParams {
+  const query = new URLSearchParams();
+
+  if (params.search) query.set("q", params.search);
+  for (const id of params.rankIds) query.append("rank", id);
+  if (params.minPrice !== undefined) query.set("min_price", String(params.minPrice));
+  if (params.maxPrice !== undefined) query.set("max_price", String(params.maxPrice));
+  if (params.minCollectionSort !== undefined) {
+    query.set("min_collection", String(params.minCollectionSort));
+  }
+  if (params.minSkins !== undefined) {
+    query.set("min_skins", String(params.minSkins));
+  }
+  // The default is not worth carrying in a link that gets shared.
+  if (params.sort !== "newest") query.set("sort", params.sort);
+
+  return query;
+}
