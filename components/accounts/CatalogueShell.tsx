@@ -165,7 +165,7 @@ export function CatalogueShell({
               type="search"
               value={term}
               onChange={(event) => setTerm(event.target.value)}
-              placeholder="Search by reference"
+              placeholder="Search by ID"
               className="pr-9"
             />
             {pending && (
