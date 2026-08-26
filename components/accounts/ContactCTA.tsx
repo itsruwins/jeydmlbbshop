@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { FollowLinks } from "@/components/shared/FollowLinks";
 import { SocialButtons } from "@/components/shared/SocialButtons";
@@ -33,12 +33,23 @@ export function ContactCTA({
   price,
   status,
   socialLinks,
+  paymentMarks,
 }: {
   reference: string;
   /** Quoted in the message, so it records what the buyer was looking at. */
   price: number | null;
   status: AccountStatus;
   socialLinks: SocialLink[];
+  /**
+   * The "we accept" strip, handed in already rendered rather than imported.
+   *
+   * This component is a client component for the sake of one clipboard write,
+   * and the payment marks are ~44KB of inlined logo artwork. Importing them
+   * here would drag every path into the client bundle to be shipped, parsed
+   * and never touched again. Passed in from the server component that renders
+   * this one, they stay server-rendered HTML.
+   */
+  paymentMarks?: ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -114,10 +125,16 @@ export function ContactCTA({
         </button>
       </div>
 
+      {/* Payment before socials, because they answer different questions at
+          different distances. "How would I pay you?" is the last thing between
+          reading the price and sending the message; "where else are you?" is
+          what someone does instead of sending it. */}
+      {paymentMarks}
+
       {follow.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[var(--border)] pt-3">
           <span className="text-[length:var(--text-sm)] text-ink-3">
-            New stock goes up on
+            Also on
           </span>
           <FollowLinks links={follow} variant="solid" />
         </div>

@@ -809,3 +809,74 @@ body {
   -webkit-mask-image: var(--tag-hole);
   mask-image: var(--tag-hole);
 }
+
+/* --------------------------------------------------------------------------
+   Payment marks — the "we accept" strip
+
+   A second crawl on the site, and deliberately not the same one. The vouch
+   marquee is full-bleed and 64s; this runs inside a 27rem rail where the track
+   is a fraction of that length, so it needs its own duration to travel at a
+   comparable speed rather than whipping past. One pass is ~570px, so 20s
+   puts it near 29px/s — slower than the vouch strip, which is right for marks
+   this small, and still quick enough to read as alive rather than stalled.
+
+   The un-animated state is the one that has to work hardest. Under reduced
+   motion nothing moves, so the second pass — which exists only to give the
+   loop somewhere to go — becomes a visible duplicate of the first and is
+   hidden, and the viewport is handed back to the user to scroll. Without that
+   the row would simply be cut off at the card edge with no way to see the rest.
+   -------------------------------------------------------------------------- */
+.mop-viewport {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mop-track {
+    /* Duration, not speed — so it is set per variant by how long that
+       variant's track actually is. Half the rail's track is ~570px and half
+       the band's is ~1430px; at 20s and 50s both land near 29px/s, which is
+       the speed the marks were judged at. Changing one without the other changes how fast the row
+       feels in that one place. */
+    animation: mop-crawl var(--mop-duration, 20s) linear infinite;
+  }
+
+  /* Pausing is the only way to read a mark that is mid-travel, and hovering is
+     exactly what someone does when they think they saw their bank go past. */
+  .mop:hover .mop-track,
+  .mop:focus-within .mop-track {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mop-viewport {
+    overflow-x: auto;
+    /* The fades sit against the viewport, so a scrollbar inside it would land
+       under them. There is nothing to lose by removing it here. */
+    scrollbar-width: none;
+  }
+
+  .mop-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Every set after the first exists only to give the loop somewhere to go.
+     Standing still they are plain duplicates, so only the first survives. */
+  .mop-track > [data-set]:not([data-set="0"]) {
+    display: none;
+  }
+
+  /* The fades exist to dissolve marks that are travelling off the edge. With
+     nothing travelling they are just a shadow falling on the first and last
+     mark, so they pull back to a hint — enough to still say "there is more
+     this way" where the row does overflow and has to be scrolled. */
+  .mop-fade {
+    width: 1rem;
+  }
+}
+
+@keyframes mop-crawl {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}

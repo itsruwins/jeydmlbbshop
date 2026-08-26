@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Faq } from "@/components/home/Faq";
 import { HeroShowcase } from "@/components/home/HeroShowcase";
 import { StockShelf } from "@/components/home/StockShelf";
+import { PaymentMarks } from "@/components/shared/PaymentMarks";
 import { VouchCard } from "@/components/home/VouchWall";
 import { VOUCHES } from "@/components/home/vouches";
 import { ContactButton } from "@/components/shared/ContactButton";
@@ -158,7 +159,7 @@ export default async function HomePage() {
                 has enough rounded rectangles on it already. */}
             <dl className="mt-2 flex w-full flex-wrap items-baseline gap-x-8 gap-y-3 border-t border-[var(--border)] pt-5">
               {[
-                [SHOP.accountsSold, "handed over"],
+                [SHOP.accountsSold, "accounts sold"],
                 ["< 1 hr", "reply time"],
                 ["Every listing", "fully photographed"],
               ].map(([value, label]) => (
@@ -220,6 +221,27 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── The payment line ───────────────────────────────────────────────
+          One line, not a fold. Every section on this page owns a spatial idea
+          and this deliberately owns none — it is a rule with content on it,
+          sitting in the seam between the shelf and the process so it does not
+          interrupt the rhythm the way a seventh section would.
+
+          It is placed here rather than anywhere else for two reasons. The
+          heading directly beneath it reads "Nothing is paid until step three",
+          and a row of banks is the setup for that line rather than a
+          distraction from it. And it is two folds clear of the vouch strip,
+          which is the only other thing on the page that moves — put them on
+          one screen and both stop reading as information.
+
+          The caption holds still while the marks travel past it, so the label
+          is never off-screen from the thing it labels. */}
+      <section className="border-b border-[var(--border)] bg-bg">
+        <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
+          <PaymentMarks variant="band" />
+        </div>
+      </section>
 
       {/* ── 3. The process ─────────────────────────────────────────────────
           The one inverted band on the page. Numbers earn their place here

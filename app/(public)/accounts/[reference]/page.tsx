@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AccountGallery } from "@/components/accounts/AccountGallery";
 import { ContactCTA } from "@/components/accounts/ContactCTA";
+import { PaymentMarks } from "@/components/shared/PaymentMarks";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getAccountByReference } from "@/functions/accounts/getAccountByReference";
 import { getSocialLinks } from "@/functions/socialLinks/getSocialLinks";
@@ -113,6 +114,7 @@ export default async function AccountDetailPage({
             price={account.price}
             status={account.status}
             socialLinks={socialLinks}
+            paymentMarks={<PaymentMarks />}
           />
 
           <section className="flex flex-col gap-3">
