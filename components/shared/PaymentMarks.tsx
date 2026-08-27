@@ -144,7 +144,19 @@ export function PaymentMarks({
 
   if (band) {
     return (
-      <div className={cn("mop flex items-center gap-4", className)}>
+      /* `min-w-0` is load-bearing, not habit.
+
+         The track inside is thousands of pixels wide and only survives because
+         a clipping box stands between it and the page. That box is a flex
+         item and carries its own `min-w-0`, but this row is the thing the
+         *outside* world measures, and its automatic minimum size — the one a
+         grid or flex parent asks for before it decides how wide a column has
+         to be — resolves to the whole track unless it is told otherwise.
+         Without this, dropping the band into a grid cell sizes the cell to
+         the crawl and every other row in that grid is stretched to match. It
+         is stated here rather than at each call site because a caller has no
+         way to know the row contains something 8x the width of a phone. */
+      <div className={cn("mop flex min-w-0 items-center gap-4", className)}>
         {caption}
         {/* A hairline rather than more space. The caption is pinned and the
             marks are not, so the row needs a stated edge between the thing
