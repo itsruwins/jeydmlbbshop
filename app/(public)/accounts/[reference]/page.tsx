@@ -362,25 +362,33 @@ export default async function AccountDetailPage({
           {!hasInstallment && <BeforeYouMessage />}
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-2">
+        {/* `justify-end` is what puts this column's last box on the same line
+            as the rail's last box.
+
+            The two columns are independent stacks and they do not end level on
+            their own: the rail here is a card plus `BeforeYouMessage`, this
+            one is a gallery plus a spec panel, and whichever runs longer sets
+            the height of the grid. The shorter one is then stretched by the
+            `1fr` row and its surplus has to be somewhere. Left at the default
+            it collects *under* the last box, which is the misalignment you see
+            — the spec panel stopping a few pixels short of the panel beside
+            it. Sent to the top it collects in the gap below the thumbnails
+            instead, and the two boxes close on one line.
+
+            Above the gap rather than below it, because a gap above the last
+            box is read as spacing and a gap below it is read as the box being
+            the wrong size. It is small in practice: `BeforeYouMessage` was
+            written to bring the rail out level with this column, so what is
+            being moved is the remainder, not the difference.
+
+            A listing with installment has a `mt-auto` on the marks band at the
+            foot of this column, and an auto margin takes the free space before
+            justification can — so that listing keeps behaving exactly as it
+            did, with the marks doing this job instead. */}
+        <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-2 lg:justify-end">
           {(specs.length > 0 || gameId) && (
-            /* The heading is inside the box, not floating above it.
-
-               It floated for as long as this column had nothing beside it at
-               this height. It does now — `BeforeYouMessage` sits directly
-               across the gutter, a bordered panel with its own label on top —
-               and a floating label facing a captioned box reads as two
-               unrelated objects that happen to be level. Both are the same
-               thing: a quiet label naming what is under it. They are drawn the
-               same way.
-
-               A rule under the label rather than the gap the rail's panel
-               uses, because this body is a full-bleed table whose own
-               hairlines run to the box edge. Padding the label to match the
-               rows and ruling it off is what lets the two sit in one box
-               without the label looking like a row that lost its value. */
-            <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface">
-              <h2 className="border-b border-[var(--border)] px-4 py-3 text-[length:var(--text-sm)] font-medium tracking-[0.005em] text-ink-3">
+            <section className="flex flex-col gap-3">
+              <h2 className="text-[length:var(--text-sm)] font-medium tracking-[0.005em] text-ink-3">
                 What you are getting
               </h2>
               {/* One panel of hairline-separated rows rather than four floating
@@ -394,7 +402,7 @@ export default async function AccountDetailPage({
                   the far right with 60rem of nothing between them, which is a
                   row a reader has to track rather than read. Halving the width
                   halves the trip without going back to tiles. */}
-              <dl className="grid grid-cols-1 sm:grid-cols-2">
+              <dl className="grid grid-cols-1 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface sm:grid-cols-2">
                 {specs.map((spec, index) => (
                   <div
                     key={spec.label}
@@ -451,18 +459,14 @@ export default async function AccountDetailPage({
           )}
 
           {account.description?.trim() && (
-            /* Same box, same ruled label — see the spec panel above. This one
-               is directly beneath it, so it is the section that would have
-               been left visibly odd by fixing only the panel the eye lands on
-               first. */
-            <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface">
-              <h2 className="border-b border-[var(--border)] px-4 py-3 text-[length:var(--text-sm)] font-medium tracking-[0.005em] text-ink-3">
+            <section className="flex flex-col gap-3">
+              <h2 className="text-[length:var(--text-sm)] font-medium tracking-[0.005em] text-ink-3">
                 About this account
               </h2>
               {/* `pre-line`, not `pre`: the seller writes these in a textarea
                   and the line breaks they put in are meaning, but the wrapping
                   is the browser's job. */}
-              <p className="whitespace-pre-line p-4 leading-relaxed text-ink-2">
+              <p className="whitespace-pre-line rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface p-4 leading-relaxed text-ink-2">
                 {account.description.trim()}
               </p>
             </section>
