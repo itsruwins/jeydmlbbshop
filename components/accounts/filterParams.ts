@@ -30,6 +30,8 @@ export type CatalogueParams = {
   maxPrice?: number;
   minCollectionSort?: number;
   minSkins?: number;
+  /** Only listings open for a downpayment. */
+  installmentOnly: boolean;
   sort: PublicSort;
 };
 
@@ -96,6 +98,12 @@ export function readCatalogueParams(params: Raw): CatalogueParams {
         : maxPrice,
     minCollectionSort: readInt(params.min_collection, { min: 1, max: 45 }),
     minSkins: readInt(params.min_skins, { min: 0, max: 5000 }),
+    // Present and not "0" means on. A filter that only ever narrows needs no
+    // way to spell "off" in the URL — see `toSearchParams`, which omits it.
+    installmentOnly: (() => {
+      const raw = one(params.installment);
+      return raw !== undefined && raw !== "" && raw !== "0" && raw !== "false";
+    })(),
     sort,
   };
 }
@@ -108,7 +116,8 @@ export function hasActiveFilters(params: CatalogueParams): boolean {
     params.minPrice !== undefined ||
     params.maxPrice !== undefined ||
     params.minCollectionSort !== undefined ||
-    params.minSkins !== undefined
+    params.minSkins !== undefined ||
+    params.installmentOnly
   );
 }
 
@@ -118,6 +127,7 @@ export function countActiveFilters(params: CatalogueParams): number {
     params.minPrice !== undefined || params.maxPrice !== undefined,
     params.minCollectionSort !== undefined,
     params.minSkins !== undefined,
+    params.installmentOnly,
   ].filter(Boolean).length;
 }
 
@@ -130,6 +140,7 @@ export function clearedFilters(params: CatalogueParams): CatalogueParams {
     maxPrice: undefined,
     minCollectionSort: undefined,
     minSkins: undefined,
+    installmentOnly: false,
     sort: params.sort,
   };
 }
@@ -154,6 +165,7 @@ export function filterSignature(params: CatalogueParams): string {
     params.maxPrice ?? "",
     params.minCollectionSort ?? "",
     params.minSkins ?? "",
+    params.installmentOnly ? "installment" : "",
     params.sort,
   ].join("|");
 }
@@ -172,6 +184,7 @@ export function toSearchParams(params: CatalogueParams): URLSearchParams {
   if (params.minSkins !== undefined) {
     query.set("min_skins", String(params.minSkins));
   }
+  if (params.installmentOnly) query.set("installment", "1");
   // The default is not worth carrying in a link that gets shared.
   if (params.sort !== "newest") query.set("sort", params.sort);
 

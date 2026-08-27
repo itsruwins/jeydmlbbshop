@@ -39,6 +39,8 @@ reject bad input.
 | `description` | `text` | Legacy. No longer collected or written; the listing page no longer renders it |
 | `status` | `text` | `available` \| `reserved` \| `sold` \| `hidden` |
 | `is_featured` | `boolean` | |
+| `installment_available` | `boolean` | Whether this listing takes a downpayment. Added 27 Aug 2026 |
+| `installment_percents` | `smallint[]` | Downpayments offered, any of `50`, `70`, `80`. Empty unless `installment_available` |
 | `created_at` | `timestamptz` | |
 | `updated_at` | `timestamptz` | |
 
@@ -49,6 +51,28 @@ would raise. The four-value vocabulary is therefore enforced in
 
 `title` was **dropped** from the table on 24 Aug 2026, after the admin form
 stopped collecting one. Nothing in the app selects or writes it any more.
+
+### Installment
+
+The two installment columns are one statement and the table refuses to let them
+contradict each other: `installment_available` with no percentages is an offer
+with no terms, and percentages without the flag are a stale value waiting to
+reappear the next time the flag is flipped. Two CHECK constraints enforce that
+pair and the `50 / 70 / 80` vocabulary — the same choice as `status`, and
+re-validated in `schemas/accountSchema.ts` on the way in for the same reason.
+
+**No peso figure is stored.** A downpayment is a percentage of `price`, which
+is a column on the same row, so the money is computed at render time in
+`lib/utils/installment.ts`. Storing it as well would mean an edited price could
+leave a stale downpayment behind it, and the two would have no way to disagree
+visibly.
+
+Nothing clears the flag when a listing sells — a sold account may go back on
+sale, and the terms it was offered on are still true. The buyer-facing surfaces
+ask `offersInstallment()` instead, which requires `status = 'available'`, so a
+sold listing never advertises terms nobody can take.
+
+Added by `supabase/changes/2026-08-27-installment.sql`.
 
 Confirmed absent (they belong to the archived design, not this one):
 `reference`, `price_php`, `rank_slug`, `collection_slug`, `published_at`,

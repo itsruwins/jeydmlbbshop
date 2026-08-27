@@ -23,6 +23,8 @@ export type PublicFilters = {
   /** Inclusive bounds on collection_levels.sort_order, 1–45. */
   minCollectionSort?: number;
   minSkins?: number;
+  /** Only listings open for a downpayment. Absent or false means every listing. */
+  installmentOnly?: boolean;
   sort?: PublicSort;
 };
 
@@ -71,6 +73,7 @@ export async function getPublicAccounts(
     maxPrice,
     minCollectionSort,
     minSkins,
+    installmentOnly = false,
     sort = "newest",
   } = filters;
 
@@ -100,6 +103,11 @@ export async function getPublicAccounts(
   if (typeof minPrice === "number") query = query.gte("price", minPrice);
   if (typeof maxPrice === "number") query = query.lte("price", maxPrice);
   if (typeof minSkins === "number") query = query.gte("skin_count", minSkins);
+
+  // The flag only, not the percentages. A buyer asking for installment is
+  // asking whether they can pay in two parts at all; which fractions are on
+  // offer is what the listing page is for.
+  if (installmentOnly) query = query.eq("installment_available", true);
 
   if (typeof minCollectionSort === "number") {
     // Addressed by the embed's alias, matching how it is selected above.

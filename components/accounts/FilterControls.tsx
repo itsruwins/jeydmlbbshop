@@ -109,6 +109,55 @@ export function FilterControls({
         </ul>
       </Group>
 
+      <Group label="Payment">
+        {/* One switch, not a ladder: there is nothing ordered about it and
+            nothing to compare it against. It states the count for the same
+            reason every other control here does — so a buyer knows before
+            tapping whether the shop currently has any. */}
+        <button
+          type="button"
+          aria-pressed={params.installmentOnly}
+          disabled={facets.installment === 0 && !params.installmentOnly}
+          onClick={() => onChange({ installmentOnly: !params.installmentOnly })}
+          className={cn(
+            "flex min-h-11 w-full items-center gap-2.5 rounded-[var(--radius)] border px-3 text-left",
+            "transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]",
+            params.installmentOnly
+              ? "border-accent bg-accent-soft"
+              : "border-[var(--border-strong)] hover:border-ink-3",
+            facets.installment === 0 &&
+              !params.installmentOnly &&
+              "opacity-45 hover:border-[var(--border-strong)]",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "relative size-2 shrink-0 rounded-full transition-colors duration-[var(--dur-fast)]",
+              params.installmentOnly
+                ? "bg-accent ring-2 ring-accent/35"
+                : "bg-[var(--border-strong)]",
+            )}
+          />
+          <span
+            className={cn(
+              "flex-1 truncate",
+              params.installmentOnly ? "font-medium text-ink" : "text-ink-2",
+            )}
+          >
+            Installment available
+          </span>
+          <span
+            className={cn(
+              "tabular text-[length:var(--text-xs)]",
+              params.installmentOnly ? "text-accent-ink" : "text-ink-3",
+            )}
+          >
+            {facets.installment}
+          </span>
+        </button>
+      </Group>
+
       <Group label="Skins">
         {/* Chips, not a fifth ladder. These are four arbitrary round numbers
             rather than rungs of a real progression, and at four options a row

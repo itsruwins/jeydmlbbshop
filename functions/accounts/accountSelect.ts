@@ -21,6 +21,8 @@ function build(innerCollection: boolean): string {
     description,
     status,
     is_featured,
+    installment_available,
+    installment_percents,
     created_at,
     updated_at,
     rank:ranks (id, name, sort_order),

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/Button";
 import { formatCount, formatDate, formatPrice, orDash } from "@/lib/utils/format";
+import { normaliseInstallmentPercents } from "@/lib/utils/installment";
 import type { AccountWithRelations } from "@/types/account";
 
 import { DeleteAccountButton } from "./DeleteAccountButton";
@@ -26,7 +27,7 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
     <>
       {/* Desktop */}
       <div className="hidden overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-surface md:block">
-        <table className="w-full min-w-[62rem] border-collapse text-left">
+        <table className="w-full min-w-[68rem] border-collapse text-left">
           <thead>
             <tr className="border-b border-[var(--border)] bg-surface-2">
               <Th>Reference</Th>
@@ -35,6 +36,7 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
               <Th>Collection</Th>
               <Th align="right">Skins</Th>
               <Th>Status</Th>
+              <Th>Installment</Th>
               <Th align="center">Featured</Th>
               <Th>Created</Th>
               <Th align="right">
@@ -80,6 +82,10 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                     accountReference={account.account_reference}
                     status={account.status}
                   />
+                </Td>
+
+                <Td>
+                  <InstallmentCell account={account} />
                 </Td>
 
                 <Td align="center">
@@ -152,6 +158,10 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                 className="col-span-2"
               />
               <Detail label="Created" value={formatDate(account.created_at)} />
+              <Detail
+                label="Installment"
+                value={installmentSummary(account)}
+              />
             </dl>
 
             <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3">
@@ -219,6 +229,40 @@ function Td({
     >
       {children}
     </td>
+  );
+}
+
+/**
+ * What the listing is offering, as a sentence short enough for a table cell.
+ *
+ * The percentages rather than the pesos. This table is scanned across many
+ * rows at different prices, where "50 / 80%" is one shape to compare and four
+ * peso figures are not; the money is on the listing page, where there is one
+ * price to relate it to.
+ */
+function installmentSummary(
+  account: Pick<AccountWithRelations, "installment_available" | "installment_percents">,
+): string {
+  if (!account.installment_available) return "—";
+  const percents = normaliseInstallmentPercents(account.installment_percents);
+  // Only reachable if a row was edited by hand past the CHECK constraint that
+  // pairs the flag with the terms. Better a visible oddity than a bare dash
+  // that looks like the flag is simply off.
+  if (percents.length === 0) return "Open, no terms";
+  return `${percents.join(" / ")}%`;
+}
+
+function InstallmentCell({ account }: { account: AccountWithRelations }) {
+  const summary = installmentSummary(account);
+
+  if (!account.installment_available) {
+    return <span className="text-ink-3">{summary}</span>;
+  }
+
+  return (
+    <span className="tabular inline-flex items-center whitespace-nowrap rounded-full border border-accent-border bg-accent-soft px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-accent-ink">
+      {summary}
+    </span>
   );
 }
 

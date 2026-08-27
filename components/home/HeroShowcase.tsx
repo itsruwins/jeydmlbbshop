@@ -156,7 +156,7 @@ export function HeroShowcase({
               the price in half. The pull is tied to this card's padding — 1.25
               then 1.5rem — so roughly half the tag hangs below the image at
               both widths. Change the padding and this moves with it. */}
-          <span className="price-tag display tabular relative z-10 -mt-12 mb-1 w-fit bg-accent-fill text-[length:var(--display-2)] leading-none text-on-accent-fill sm:-mt-14">
+          <span className="price-tag display tabular relative z-10 -mt-12 mb-1 w-fit bg-accent-fill text-[length:var(--display-2)] leading-none text-on-accent-fill [filter:drop-shadow(0_2px_4px_oklch(0_0_0/0.45))] sm:-mt-14">
             {formatPrice(account.price)}
           </span>
 

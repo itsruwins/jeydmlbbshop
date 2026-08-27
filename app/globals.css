@@ -800,45 +800,85 @@ body:has([data-shell="wide"]) {
 }
 
 /* --------------------------------------------------------------------------
-   The price tag
+   The price plate
 
-   A swing tag: pointed at one end, with a hole punched through it where the
-   string would go. Both cues are silhouette rather than texture — no paper
-   grain, no fake fold, no drop shadow pretending to be a real object. The
-   shape does the work, which is what keeps it in the same language as the rest
-   of the interface instead of becoming a sticker pasted onto it.
+   It was a swing tag — pointed at one end, with a hole punched through it
+   where the string would go. Both cues were silhouette, which was the right
+   instinct and the wrong object: a paper tag drawn flat, on a black page, over
+   artwork, has nothing to be a tag *against*.
 
-   The hole is genuinely transparent, not a circle filled with the card colour.
-   The tag straddles the screenshot, so a painted-on hole would only look like
-   a hole where the backdrop happened to match; masking it means the artwork
-   shows through wherever the tag lands.
+   The hole was the tell. It was a real mask rather than a painted circle
+   precisely so the backdrop would show through — and the backdrops here are
+   near-black page and dark artwork, so what showed through was more of the
+   same colour the tag already was. At the sizes it is set at, a 4px window
+   onto an almost identical value is a speck, not a punched hole. The point had
+   the same problem from the other side: a triangular nick that had to be paid
+   for with 1.3em of empty left padding, so the tag was a third wider than the
+   price it carried.
+
+   So: not a tag pretending to be paper, a *plate* — the thing an esports card
+   or a case badge is, machined rather than printed. Two 45 degree chamfers on
+   opposite corners give it the cut-not-rounded silhouette the tag was after,
+   symmetrically, so it reads the same whether it is anchored left over a card
+   edge or right inside a frame.
+
+   ## Depth on black comes from rim light, not from shadow
+
+   This is the whole reason the old tag read flat. A drop shadow is dark, and
+   the ground here is already as dark as the shadow — the tag was casting onto
+   a surface that could not show it. Real objects on a black stage are read by
+   the light that catches their top edge, so that is what is drawn: a hairline
+   of white at 0.1em, falling off immediately, plus a body that runs light to
+   dark down its own height. The plate has an interior and a lit edge, which is
+   two more cues than a flat swatch of --accent-fill had.
+
+   Both are derived from --accent-fill with color-mix rather than written as
+   literals, so the plate follows the token into the light theme (where the
+   fill stays dark and the text stays white) instead of needing a second copy.
+
+   ## Why this is em all the way down and no longer two rules
+
+   There used to be a `.price-tag-lg` that restated the same geometry in `em`,
+   because the original was drawn in `rem` at one size and fell apart at the
+   others — at the listing page's larger steps the point shrank to a nick and
+   the left padding stayed a wide gutter.
+
+   Sizing the geometry in `em` from the start makes that second rule
+   unnecessary. There is one plate, set at 1.125rem on a listing page and at
+   --display-2 in the hero, and it is the same shape at both because every
+   number in it is a multiple of its own type size.
    -------------------------------------------------------------------------- */
 .price-tag {
-  /* The left padding has three things to clear, not one: the cut point, the
-     hole, and a gap after the hole. At 1.45rem the peso sign landed about 3px
-     from the hole's edge and the two read as one crowded object. The numbers
-     below are derived, not guessed:
+  /* The chamfer. Large enough to read as a deliberate cut at the smallest size
+     the plate is set at (1.125rem, so 0.5em is 9px), small enough at the hero's
+     42px that it does not start eating the numerals. */
+  --tag-cut: 0.5em;
 
-       point ends            0.70rem
-       hole spans      0.90 – 1.34rem  (centre 1.12, radius 0.22)
-       text starts           1.95rem   → 0.61rem of clearance
-
-     Change the hole's position or radius and this has to move with it. */
-  padding: 0.5rem 0.9rem 0.5rem 1.95rem;
-
-  /* The point. `clip-path` rules out border-radius, and that is the right
-     trade: a swing tag has cut corners, not rounded ones. */
-  clip-path: polygon(0 50%, 0.7rem 0, 100% 0, 100% 100%, 0.7rem 100%);
-
-  /* Barely larger than it looks it should be: at 1x a 2.7px radius reads as a
-     speck of dust rather than as a punched hole. */
-  --tag-hole: radial-gradient(
-    circle at 1.12rem 50%,
-    transparent 0.22rem,
-    #000 0.25rem
+  padding: 0.4em 0.8em;
+  clip-path: polygon(
+    var(--tag-cut) 0,
+    100% 0,
+    100% calc(100% - var(--tag-cut)),
+    calc(100% - var(--tag-cut)) 100%,
+    0 100%,
+    0 var(--tag-cut)
   );
-  -webkit-mask-image: var(--tag-hole);
-  mask-image: var(--tag-hole);
+
+  /* Layered over whatever --accent-fill the caller sets as background-color,
+     which stays as the fallback for anything that cannot mix colours.
+
+     The rim is deliberately not a border: clip-path cuts borders along with
+     the box, so a bordered plate would have its lit edge sliced off at exactly
+     the two corners the shape is about. A background layer is clipped to the
+     same silhouette and follows the cut instead of being cut by it. */
+  background-image:
+    linear-gradient(to bottom, oklch(1 0 0 / 0.24), oklch(1 0 0 / 0) 0.1em),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--accent-fill), white 9%),
+      var(--accent-fill) 58%,
+      color-mix(in oklab, var(--accent-fill), black 24%)
+    );
 }
 
 /* --------------------------------------------------------------------------

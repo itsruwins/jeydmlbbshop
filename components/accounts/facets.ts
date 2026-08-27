@@ -38,7 +38,7 @@ import { SKIN_STEPS, type CatalogueParams } from "./filterParams";
  * reaches the thousands this is the thing to move into Postgres — not before.
  */
 
-type Dimension = "rank" | "price" | "collection" | "skins";
+type Dimension = "rank" | "price" | "collection" | "skins" | "installment";
 
 /**
  * Mirrors the query in `getPublicAccounts` exactly, minus one dimension.
@@ -89,6 +89,10 @@ function matches(
     if (account.skin_count < params.minSkins) return false;
   }
 
+  if (except !== "installment" && params.installmentOnly) {
+    if (!account.installment_available) return false;
+  }
+
   return true;
 }
 
@@ -114,6 +118,8 @@ export type CatalogueFacets = {
   collections: FacetOption[];
   skins: Array<{ value: number; count: number }>;
   price: PriceFacet | null;
+  /** How many listings the installment toggle would return. */
+  installment: number;
 };
 
 /**
@@ -169,6 +175,9 @@ export function buildFacets({
   const withoutSkins = all.filter((account) =>
     matches(account, params, "skins"),
   );
+  const withoutInstallment = all.filter((account) =>
+    matches(account, params, "installment"),
+  );
 
   // The 45 levels collapsed to their nine tier heads. "Exalted Collector and
   // above" is the question a buyer actually has; a 45-rung ladder is not.
@@ -204,5 +213,12 @@ export function buildFacets({
     })),
 
     price: priceFacet(all),
+
+    // The flag, matching the query. A listing marked open for installment with
+    // no percentages on it cannot exist — the database refuses the pair — so
+    // there is nothing here for the count to disagree with.
+    installment: withoutInstallment.filter(
+      (account) => account.installment_available,
+    ).length,
   };
 }

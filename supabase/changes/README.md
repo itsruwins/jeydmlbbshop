@@ -19,6 +19,7 @@ missing feature. The order is: run the SQL, confirm it, then deploy.
 | File | What it does | Run on |
 | --- | --- | --- |
 | `2026-08-26-social-link-kind.sql` | Adds `social_links.kind`, and inserts the TikTok and Instagram profiles as follow links | _not yet run_ |
+| `2026-08-27-installment.sql` | Adds `accounts.installment_available` and `accounts.installment_percents`, with the CHECK constraints that keep the pair honest | _not yet run_ |
 
 Update the "Run on" column when you run one, and update `supabase/schema/`
 in the same commit so the documented schema still matches the live one.

@@ -18,6 +18,21 @@ import type { SocialLink } from "@/types/socialLink";
  * immediately which account is meant. That context is the reference and the
  * price, written into a message the buyer can send as-is.
  *
+ * ## The price is not restated here
+ *
+ * It was, briefly, as a display-type line above the heading, on the reasoning
+ * that a buyer reading the spec tiles has the gallery's tag scrolled off the
+ * top of the screen.
+ *
+ * It read as redundant, and it was: the card already carries the price inside
+ * the message a line further down ("…account J4 (₱3,500)"), which is the copy
+ * that actually has to be right, because it is the one being sent. A second
+ * statement of it directly above a heading that asks a question was a number
+ * with no question to answer.
+ *
+ * So the price is said once on the artwork and once in the message, and the
+ * heading gets its line back. See `AttachedPriceTag`.
+ *
  * Reserved and sold listings keep a contact route rather than losing it. Someone
  * looking at a sold account is a buyer with proven taste, and "ask about
  * something similar" is a better outcome than a dead end.

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { normaliseInstallmentPercents } from "@/lib/utils/installment";
 import { ACCOUNT_STATUSES } from "@/types/account";
 
 /**
@@ -84,7 +85,43 @@ export const accountSchema = z.object({
   }),
 
   is_featured: z.boolean().default(false),
-});
+
+  // The offer, not the arithmetic. Only the flag and the percentages are
+  // stored; the peso figures are derived from the price at render time so the
+  // two can never drift apart (see `lib/utils/installment.ts`).
+  installment_available: z.boolean().default(false),
+
+  // Anything outside 50/70/80 is dropped rather than rejected — duplicates and
+  // stray values are a bug in whatever produced the array, not a decision the
+  // admin made, and there is no field-level message that would help. What the
+  // admin *did* decide, "open for installment", is checked below: dropping
+  // every value leaves an empty array, and an empty array on an open listing
+  // is an error they can see and fix.
+  installment_percents: z
+    .array(z.union([z.string(), z.number()]))
+    .default([])
+    .transform(normaliseInstallmentPercents),
+})
+  .superRefine((values, ctx) => {
+    if (values.installment_available && values.installment_percents.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["installment_percents"],
+        message: "Choose at least one downpayment.",
+      });
+    }
+  })
+  // Closing a listing to installment clears the percentages rather than
+  // leaving them in the row. The database enforces the same pair, but doing it
+  // here means the admin does not have to untick three boxes to untick one,
+  // and a value cannot lie dormant waiting to reappear when the flag is
+  // flipped back on.
+  .transform((values) => ({
+    ...values,
+    installment_percents: values.installment_available
+      ? values.installment_percents
+      : [],
+  }));
 
 /** What the form collects, before parsing (all strings from inputs). */
 export type AccountFormInput = z.input<typeof accountSchema>;

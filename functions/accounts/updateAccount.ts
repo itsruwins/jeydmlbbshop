@@ -63,6 +63,12 @@ export async function updateAccount(
       // rule must not depend on which route the change came through.
       is_featured:
         parsed.data.status === "available" ? parsed.data.is_featured : false,
+      // Written as a pair, always. The schema has already emptied the array on
+      // a listing that is not open for installment, so these two cannot reach
+      // the database contradicting each other — which is what the CHECK
+      // constraint on the table would otherwise reject as an opaque error.
+      installment_available: parsed.data.installment_available,
+      installment_percents: parsed.data.installment_percents,
     })
     .eq("id", id);
 

@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { orderedImages } from "@/lib/utils/accountImages";
 import { cn } from "@/lib/utils/cn";
 import { formatCount, formatPrice } from "@/lib/utils/format";
+import { installmentPlans, offersInstallment } from "@/lib/utils/installment";
 import type { AccountWithRelations } from "@/types/account";
 
 /**
@@ -52,6 +53,15 @@ import type { AccountWithRelations } from "@/types/account";
  * this is not, so without it the artwork paints over the tag and cuts it in
  * half.
  *
+ * **The installment mark rides beside the tag**, on the same line and pulled
+ * up by the same negative margin, because it is a fact about the price rather
+ * than a fifth thing about the account: a buyer scanning a shelf reads the two
+ * together or not at all. It carries the lowest downpayment on offer rather
+ * than the word alone — "₱1,750 down" beside a ₱3,500 tag says both what the
+ * option is and whether it is affordable, where "Installment" on its own only
+ * asks the question the buyer has to open the card to answer. It is
+ * absent on sold and reserved cards, which are not offering anything.
+ *
  * **Four facts, one per line, each anchored by a mark.** Skins and heroes
  * shared a row until the marks gave that away as a compromise — the hero icon
  * began wherever the skin number happened to end, so it landed somewhere
@@ -84,6 +94,12 @@ export function ListingCard({
   const images = orderedImages(account.images);
   const href = `/accounts/${account.account_reference}`;
   const isClosed = account.status !== "available";
+
+  // The cheapest way in, which is the one worth advertising. The plans arrive
+  // lowest percentage first, so the first is the smallest downpayment.
+  const lowestPlan = offersInstallment(account)
+    ? (installmentPlans(account)[0] ?? null)
+    : null;
 
   return (
     <article
@@ -122,9 +138,27 @@ export function ListingCard({
       </ScreenshotCarousel>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <span className="price-tag display tabular relative z-10 -mt-9 mb-0.5 w-fit bg-accent-fill text-[length:var(--text-xl)] leading-none text-on-accent-fill">
-          {formatPrice(account.price)}
-        </span>
+        {/* The row exists so the mark can sit on the tag's baseline. The
+            negative margin has to be on the row rather than on the tag: it is
+            what lifts the tag onto the artwork, and a mark left behind on the
+            card body would read as a separate object floating under it. */}
+        <div className="relative z-10 -mt-9 mb-0.5 flex items-end justify-between gap-2">
+          <span className="price-tag display tabular w-fit bg-accent-fill text-[length:var(--text-xl)] leading-none text-on-accent-fill [filter:drop-shadow(0_1px_2px_oklch(0_0_0/0.45))]">
+            {formatPrice(account.price)}
+          </span>
+
+          {lowestPlan && (
+            /* Outlined rather than filled: the tag is the loud object on this
+               line and two lit plates side by side would be a fight neither
+               wins. `whitespace-nowrap` because the figure and its preposition
+               are one phrase and a card narrow enough to break them would
+               leave "from" stranded on its own line. */
+            <span className="tabular mb-0.5 inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-accent-border bg-accent-soft px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-accent-ink">
+              <span className="sr-only">Installment available, </span>
+              {formatPrice(lowestPlan.down)} down
+            </span>
+          )}
+        </div>
 
         {/* A list rather than a `<dl>`: `dl` only permits `dt`/`dd`/`div` as
             children, and each mark needs a wrapper. The hidden labels carry

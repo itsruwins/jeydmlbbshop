@@ -12,12 +12,19 @@ import { useToast } from "@/components/ui/Toast";
 import { createAccount } from "@/functions/accounts/createAccount";
 import { generateAccountReference } from "@/functions/accounts/generateAccountReference";
 import { updateAccount } from "@/functions/accounts/updateAccount";
+import { formatPrice } from "@/lib/utils/format";
+import {
+  installmentPlan,
+  normaliseInstallmentPercents,
+} from "@/lib/utils/installment";
 import type { AccountFieldErrors } from "@/schemas/accountSchema";
 import {
   ACCOUNT_STATUSES,
+  INSTALLMENT_PERCENTS,
   STATUS_LABELS,
   type AccountStatus,
   type AccountWithRelations,
+  type InstallmentPercent,
 } from "@/types/account";
 import type { CollectionLevel } from "@/types/collectionLevel";
 import type { Rank } from "@/types/rank";
@@ -36,6 +43,9 @@ type FormState = {
   skin_count: string;
   status: AccountStatus;
   is_featured: boolean;
+  installment_available: boolean;
+  /** Percentages, not pesos — the peso figures are derived from the price. */
+  installment_percents: InstallmentPercent[];
 };
 
 function initialState(
@@ -55,6 +65,8 @@ function initialState(
       // public marketplace by accident. Publishing is a deliberate act.
       status: "hidden",
       is_featured: false,
+      installment_available: false,
+      installment_percents: [],
     };
   }
 
@@ -71,6 +83,12 @@ function initialState(
     skin_count: text(account.skin_count),
     status: account.status,
     is_featured: account.is_featured,
+    installment_available: account.installment_available,
+    // Cleaned on the way in as well as on the way out: a row edited by hand in
+    // Supabase can hold anything the CHECK constraint allows, in any order.
+    installment_percents: normaliseInstallmentPercents(
+      account.installment_percents,
+    ),
   };
 }
 
@@ -102,6 +120,16 @@ export function AccountForm({
   // actually act on, so it is only offered while the listing is available.
   const canFeature = values.status === "available";
 
+  /* The price as a number, for the downpayment preview only — never for
+     validation, which is the schema's job. Anything that is not a usable
+     figure yields null and the options say "Enter a price" rather than
+     computing a percentage of NaN. */
+  const parsedPrice = Number(values.price);
+  const previewPrice =
+    values.price.trim() !== "" && Number.isFinite(parsedPrice) && parsedPrice > 0
+      ? parsedPrice
+      : null;
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
     // Clearing the error as soon as the field is touched means the message
@@ -109,6 +137,15 @@ export function AccountForm({
     if (errors[key as keyof AccountFieldErrors]) {
       setErrors((current) => ({ ...current, [key]: undefined }));
     }
+  };
+
+  const togglePercent = (percent: InstallmentPercent) => {
+    const next = values.installment_percents.includes(percent)
+      ? values.installment_percents.filter((value) => value !== percent)
+      : [...values.installment_percents, percent];
+    // Kept in ladder order so the form, the listing page and the database row
+    // all read 50 → 70 → 80 regardless of the order the boxes were ticked in.
+    set("installment_percents", normaliseInstallmentPercents(next));
   };
 
   const regenerate = () => {
@@ -239,6 +276,125 @@ export function AccountForm({
             />
           </div>
         </Field>
+      </Section>
+
+      <Section title="Payment">
+        {/* Not a `<Field>`: that renders a `<label htmlFor>`, and this group has
+            no single control for a label to point at — it is a checkbox that
+            governs three buttons. The checkbox carries its own label, the
+            buttons are a labelled group, and the hint and error are rendered
+            here in the same places `<Field>` would put them. */}
+        <div className="flex flex-col gap-1.5">
+          {/* The flag and the terms are one control, not two fields that happen
+              to be near each other: the percentages have no meaning without the
+              flag, and the flag has none without them. So the options live
+              inside the checkbox's own panel and only exist while it is on.
+
+              Unticking does not clear the choice from the form state. Someone
+              who unticks by accident and ticks again finds their percentages
+              where they left them; what is *saved* is emptied by the schema, so
+              the row never carries terms it is not offering. */}
+          <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-[var(--border)] bg-surface-2 p-3.5">
+            <label className="flex cursor-pointer items-start gap-2.5">
+              <input
+                type="checkbox"
+                checked={values.installment_available}
+                onChange={(event) => {
+                  set("installment_available", event.target.checked);
+                  // The message asked for a downpayment on an open listing.
+                  // Closing it is one of the two ways to answer, so it should
+                  // take the message with it.
+                  if (!event.target.checked) {
+                    setErrors((current) => ({
+                      ...current,
+                      installment_percents: undefined,
+                    }));
+                  }
+                }}
+                className="mt-0.5 size-4 accent-[var(--accent)]"
+              />
+              <span className="font-medium text-ink">Open for installment</span>
+            </label>
+
+            {values.installment_available && (
+              <div className="flex flex-col gap-2">
+                <p
+                  id="installment-options-label"
+                  className="text-[length:var(--text-sm)] text-ink-3"
+                >
+                  Downpayment required — choose every option you will accept.
+                </p>
+
+                <div
+                  role="group"
+                  aria-labelledby="installment-options-label"
+                  aria-describedby={
+                    errors.installment_percents
+                      ? "installment_percents-error"
+                      : undefined
+                  }
+                  className="grid gap-2 sm:grid-cols-3"
+                >
+                  {INSTALLMENT_PERCENTS.map((percent) => {
+                    const active = values.installment_percents.includes(percent);
+                    const plan =
+                      previewPrice === null
+                        ? null
+                        : installmentPlan(previewPrice, percent);
+
+                    return (
+                      <button
+                        key={percent}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => togglePercent(percent)}
+                        className={[
+                          "flex min-h-11 flex-col items-start justify-center gap-0.5 rounded-[var(--radius)] border px-3 py-2 text-left",
+                          "transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]",
+                          active
+                            ? "border-accent bg-accent-soft"
+                            : "border-[var(--border-strong)] hover:border-ink-3",
+                        ].join(" ")}
+                      >
+                        <span
+                          className={[
+                            "tabular font-semibold leading-none",
+                            active ? "text-accent-ink" : "text-ink",
+                          ].join(" ")}
+                        >
+                          {percent}%
+                        </span>
+                        {/* The figures are why these are ticked rather than
+                            typed: the admin sets a price and immediately sees
+                            what each option asks for. */}
+                        <span className="tabular text-[length:var(--text-xs)] leading-none text-ink-3">
+                          {plan
+                            ? `${formatPrice(plan.down)} down · ${formatPrice(plan.balance)} left`
+                            : "Enter a price"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {errors.installment_percents ? (
+            <p
+              id="installment_percents-error"
+              role="alert"
+              className="text-[length:var(--text-sm)] text-danger-ink"
+            >
+              {errors.installment_percents}
+            </p>
+          ) : (
+            <p className="text-[length:var(--text-sm)] text-ink-3">
+              Buyers pay the downpayment to reserve the account, and the balance
+              on handover.
+            </p>
+          )}
+        </div>
       </Section>
 
       <Section title="Account details">

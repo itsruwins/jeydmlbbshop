@@ -337,6 +337,14 @@ function ActiveFilters({
     });
   }
 
+  if (params.installmentOnly) {
+    tokens.push({
+      key: "installment",
+      label: "Installment",
+      remove: () => onChange({ installmentOnly: false }),
+    });
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[var(--border)] pb-4">
       <p className="text-[length:var(--text-sm)] text-ink-3">
