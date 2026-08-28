@@ -151,12 +151,28 @@ export function HeroShowcase({
               inside it: the image sits in an overflow-hidden box for the hover
               zoom, so anything hanging off its bottom edge would be clipped.
 
+              ## Size
+
+              It was set at --display-2, which is the heading step — at full
+              width a 42px plate roughly 230px across, laid over the middle of
+              the screenshot it is meant to be pricing. The plate is the only
+              lit oxblood on the card and it hangs half off an edge; it does
+              not need heading weight on top of that to be found. --text-2xl
+              is one step down from where it was and one step up from the
+              shelf tile's --text-xl, which is the hierarchy this card wants:
+              louder than a tile in the grid, quieter than the screenshot.
+
+              It is also a fixed step rather than a clamp, so the plate is the
+              same height at every width and the pull below can be one number
+              per padding rather than a range that drifts with the viewport.
+
               `relative z-10` is load-bearing. The image box is positioned and
               this one is not, so without it the image paints on top and cuts
               the price in half. The pull is tied to this card's padding — 1.25
-              then 1.5rem — so roughly half the tag hangs below the image at
-              both widths. Change the padding and this moves with it. */}
-          <span className="price-tag display tabular relative z-10 -mt-12 mb-1 w-fit bg-accent-fill text-[length:var(--display-2)] leading-none text-on-accent-fill [filter:drop-shadow(0_2px_4px_oklch(0_0_0/0.45))] sm:-mt-14">
+              then 1.5rem — so roughly half of the ~50px plate hangs below the
+              image at both widths. Change the padding or the size and this
+              moves with them. */}
+          <span className="price-tag display tabular relative z-10 -mt-11 mb-1 w-fit bg-accent-fill text-[length:var(--text-2xl)] leading-none text-on-accent-fill [filter:drop-shadow(0_2px_4px_oklch(0_0_0/0.45))] sm:-mt-12">
             {formatPrice(account.price)}
           </span>
 

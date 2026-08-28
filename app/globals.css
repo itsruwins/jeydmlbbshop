@@ -845,13 +845,13 @@ body:has([data-shell="wide"]) {
 
    Sizing the geometry in `em` from the start makes that second rule
    unnecessary. There is one plate, set at 1.125rem on a listing page and at
-   --display-2 in the hero, and it is the same shape at both because every
+   --text-2xl in the hero, and it is the same shape at both because every
    number in it is a multiple of its own type size.
    -------------------------------------------------------------------------- */
 .price-tag {
   /* The chamfer. Large enough to read as a deliberate cut at the smallest size
      the plate is set at (1.125rem, so 0.5em is 9px), small enough at the hero's
-     42px that it does not start eating the numerals. */
+     28px that it does not start eating the numerals. */
   --tag-cut: 0.5em;
 
   padding: 0.4em 0.8em;
