@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 
@@ -54,7 +55,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        {children}
+        {/*
+          Last child of <body> so the script is queued behind the page, and
+          in the root layout rather than the buyer-facing one so admin
+          navigation is counted too. It is inert outside Vercel.
+        */}
+        <Analytics />
+      </body>
     </html>
   );
 }
