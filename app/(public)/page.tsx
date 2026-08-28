@@ -76,8 +76,12 @@ const STEPS = [
 ];
 
 export default async function HomePage() {
+  // Reference order, the same as the catalogue's default: the shelf reads J1
+  // upwards, which is how the seller talks about stock. "Newest first" put the
+  // shelf in the reverse of its own numbering and re-ordered it every time a
+  // listing was added.
   const [catalogue, socials] = await Promise.all([
-    getPublicAccounts({ sort: "newest" }),
+    getPublicAccounts({ sort: "reference" }),
     getSocialLinks(),
   ]);
 
