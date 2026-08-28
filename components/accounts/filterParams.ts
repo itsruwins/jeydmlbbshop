@@ -12,7 +12,18 @@ import type { PublicSort } from "@/functions/accounts/getPublicAccounts";
  * unrecognised falls back to the default rather than reaching the database.
  */
 
+/**
+ * The default leads, because the select shows them in this order.
+ *
+ * Reference first, not "newest". The shop numbers its listings J1 upwards and
+ * that numbering is how the seller talks about stock — a buyer is pointed at
+ * "J3", not at "the third one down" — so the shelf should read in the same
+ * direction the codes count. "Newest first" also quietly re-ordered the shelf
+ * every time a listing was added, which is the opposite of what a numbered
+ * catalogue is for; it is still here for anyone who wants it.
+ */
 export const SORT_OPTIONS = [
+  { value: "reference", label: "Reference (J1 first)" },
   { value: "newest", label: "Newest first" },
   { value: "price_asc", label: "Price, low to high" },
   { value: "price_desc", label: "Price, high to low" },
@@ -70,7 +81,7 @@ export function readCatalogueParams(params: Raw): CatalogueParams {
   const sortRaw = one(params.sort);
   const sort = SORT_OPTIONS.some((option) => option.value === sortRaw)
     ? (sortRaw as PublicSort)
-    : "newest";
+    : "reference";
 
   // `?rank=a&rank=b` and `?rank=a,b` both work — the first is what checkboxes
   // produce, the second is what someone hand-writing a link would try.
@@ -186,7 +197,7 @@ export function toSearchParams(params: CatalogueParams): URLSearchParams {
   }
   if (params.installmentOnly) query.set("installment", "1");
   // The default is not worth carrying in a link that gets shared.
-  if (params.sort !== "newest") query.set("sort", params.sort);
+  if (params.sort !== "reference") query.set("sort", params.sort);
 
   return query;
 }

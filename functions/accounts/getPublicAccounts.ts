@@ -1,3 +1,4 @@
+import { compareReference } from "@/lib/utils/compareReference";
 import { createPublicClient } from "@/lib/supabase/public";
 import { PUBLIC_STATUSES, type AccountStatus, type AccountWithRelations } from "@/types/account";
 
@@ -8,6 +9,7 @@ import {
 } from "./accountSelect";
 
 export type PublicSort =
+  | "reference"
   | "newest"
   | "price_asc"
   | "price_desc"
@@ -36,6 +38,10 @@ export type PublicCatalogue = {
 };
 
 const ORDER: Record<PublicSort, { column: string; ascending: boolean }> = {
+  // Ascending, so the shop's numbering reads forwards: J1 at the top. The
+  // database can only order this as text; `compareReference` finishes the job
+  // below, where the digits can be compared as numbers.
+  reference: { column: "account_reference", ascending: true },
   newest: { column: "created_at", ascending: false },
   price_asc: { column: "price", ascending: true },
   price_desc: { column: "price", ascending: false },
@@ -142,6 +148,18 @@ export async function getPublicAccounts(
   }
 
   const rows = (data ?? []) as unknown as AccountWithRelations[];
+
+  // PostgREST orders `account_reference` as the text column it is, which puts
+  // `J10` between `J1` and `J2`. The ordering above is still worth asking for
+  // — it makes the fetch deterministic rather than leaving the tie-break to
+  // the planner — but the shop's own numbering is restored here. Safe to do in
+  // memory: the catalogue is not paginated, so these are all the rows there
+  // are, not a page of them.
+  if (sort === "reference") {
+    rows.sort((a, b) =>
+      compareReference(a.account_reference, b.account_reference),
+    );
+  }
 
   const isAvailable = (status: AccountStatus) => status === "available";
 
