@@ -77,8 +77,16 @@ export const accountSchema = z.object({
   collection_level_id: z.string().uuid("Choose a collection level."),
 
   server: optionalText(60),
+
+  // The counts, each with the "at least" mark that decides how it reads. A
+  // seller with a few hundred heroes rarely counts to the unit, so `100` and
+  // `hero_count_is_min` render as "100+". The figure stays a number — the
+  // catalogue filters on `skin_count` — and the "+" travels beside it rather
+  // than inside it. An empty count drops its flag in the transform below.
   hero_count: optionalCount("Hero count", 500),
+  hero_count_is_min: z.boolean().default(false),
   skin_count: optionalCount("Skin count", 5000),
+  skin_count_is_min: z.boolean().default(false),
 
   status: z.enum(ACCOUNT_STATUSES, {
     message: "Choose a status.",
@@ -116,11 +124,18 @@ export const accountSchema = z.object({
   // here means the admin does not have to untick three boxes to untick one,
   // and a value cannot lie dormant waiting to reappear when the flag is
   // flipped back on.
+  //
+  // Clearing a count clears its "at least" mark for the same reason: with no
+  // figure to qualify, the flag is a value nobody can see, waiting to turn
+  // into "0+" the day a zero is typed in front of it. The database rejects
+  // that pair; emptying it here means the admin never meets the rejection.
   .transform((values) => ({
     ...values,
     installment_percents: values.installment_available
       ? values.installment_percents
       : [],
+    hero_count_is_min: values.hero_count === null ? false : values.hero_count_is_min,
+    skin_count_is_min: values.skin_count === null ? false : values.skin_count_is_min,
   }));
 
 /** What the form collects, before parsing (all strings from inputs). */

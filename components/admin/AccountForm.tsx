@@ -40,7 +40,10 @@ type FormState = {
   collection_level_id: string;
   server: string;
   hero_count: string;
+  /** Renders the count as a floor — `100` becomes "100+". */
+  hero_count_is_min: boolean;
   skin_count: string;
+  skin_count_is_min: boolean;
   status: AccountStatus;
   is_featured: boolean;
   installment_available: boolean;
@@ -60,7 +63,9 @@ function initialState(
       collection_level_id: "",
       server: "",
       hero_count: "",
+      hero_count_is_min: false,
       skin_count: "",
+      skin_count_is_min: false,
       // New listings start hidden so a half-finished draft cannot reach the
       // public marketplace by accident. Publishing is a deliberate act.
       status: "hidden",
@@ -80,7 +85,9 @@ function initialState(
     collection_level_id: account.collection_level_id ?? "",
     server: account.server ?? "",
     hero_count: text(account.hero_count),
+    hero_count_is_min: account.hero_count_is_min,
     skin_count: text(account.skin_count),
+    skin_count_is_min: account.skin_count_is_min,
     status: account.status,
     is_featured: account.is_featured,
     installment_available: account.installment_available,
@@ -137,6 +144,50 @@ export function AccountForm({
     if (errors[key as keyof AccountFieldErrors]) {
       setErrors((current) => ({ ...current, [key]: undefined }));
     }
+  };
+
+  /**
+   * A count typed with the "+" already on it.
+   *
+   * "100+" is how this figure is written everywhere it is quoted, so it is
+   * what an admin reaches for in a box labelled Heroes — and the box holds a
+   * number, so the old form met that with "Hero count must be a number." The
+   * "+" is not rejected here; it is lifted off the string and into the flag
+   * that is already storing it, and the tickbox below the input ticks itself
+   * to show where it went. Typing the "+" and ticking the box are the same
+   * act, which is the point.
+   *
+   * Only a trailing "+" is taken. Anything else is left exactly as typed, so
+   * a genuine mistake still reaches the field message rather than being
+   * quietly reinterpreted.
+   */
+  const setCount = (
+    key: "hero_count" | "skin_count",
+    flag: "hero_count_is_min" | "skin_count_is_min",
+    raw: string,
+  ) => {
+    const trimmed = raw.trimEnd();
+
+    if (trimmed.endsWith("+")) {
+      const figure = trimmed.slice(0, -1).trim();
+      setValues((current) => ({
+        ...current,
+        [key]: figure,
+        [flag]: figure !== "",
+      }));
+      setErrors((current) => ({ ...current, [key]: undefined }));
+      return;
+    }
+
+    // Clearing the count clears the mark with it — the schema and the CHECK
+    // constraint both refuse a "+" with no figure in front of it.
+    if (raw.trim() === "") {
+      setValues((current) => ({ ...current, [key]: raw, [flag]: false }));
+      setErrors((current) => ({ ...current, [key]: undefined }));
+      return;
+    }
+
+    set(key, raw);
   };
 
   const togglePercent = (percent: InstallmentPercent) => {
@@ -454,12 +505,20 @@ export function AccountForm({
               id="hero_count"
               inputMode="numeric"
               value={values.hero_count}
-              onChange={(event) => set("hero_count", event.target.value)}
+              onChange={(event) =>
+                setCount("hero_count", "hero_count_is_min", event.target.value)
+              }
               invalid={Boolean(errors.hero_count)}
               aria-describedby={describedBy("hero_count", {
                 error: errors.hero_count,
               })}
               className="tabular"
+            />
+            <AtLeastToggle
+              id="hero_count_is_min"
+              count={values.hero_count}
+              checked={values.hero_count_is_min}
+              onChange={(next) => set("hero_count_is_min", next)}
             />
           </Field>
 
@@ -468,12 +527,20 @@ export function AccountForm({
               id="skin_count"
               inputMode="numeric"
               value={values.skin_count}
-              onChange={(event) => set("skin_count", event.target.value)}
+              onChange={(event) =>
+                setCount("skin_count", "skin_count_is_min", event.target.value)
+              }
               invalid={Boolean(errors.skin_count)}
               aria-describedby={describedBy("skin_count", {
                 error: errors.skin_count,
               })}
               className="tabular"
+            />
+            <AtLeastToggle
+              id="skin_count_is_min"
+              count={values.skin_count}
+              checked={values.skin_count_is_min}
+              onChange={(next) => set("skin_count_is_min", next)}
             />
           </Field>
         </div>
@@ -561,6 +628,64 @@ export function AccountForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * The "+" on a count: `100` shown to buyers as "100+".
+ *
+ * It sits under the number rather than beside it because it is a note about
+ * that number, not a field of its own — the pair is one fact, the way the
+ * installment flag and its percentages are.
+ *
+ * The label quotes the figure currently typed, so the admin reads the exact
+ * string the listing will carry instead of imagining it. With no figure there
+ * is nothing to qualify, so the control is disabled and the value cleared:
+ * the schema drops the flag on an empty count anyway, and the database
+ * refuses the pair outright — better to make that unreachable than to explain
+ * a rejection afterwards.
+ */
+function AtLeastToggle({
+  id,
+  count,
+  checked,
+  onChange,
+}: {
+  id: string;
+  count: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  const figure = count.trim();
+  const enabled = figure !== "";
+
+  return (
+    <label
+      htmlFor={id}
+      className={
+        enabled
+          ? "flex cursor-pointer items-center gap-2 pt-0.5 text-[length:var(--text-sm)] text-ink-3"
+          : "flex items-center gap-2 pt-0.5 text-[length:var(--text-sm)] text-ink-3 opacity-60"
+      }
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={enabled && checked}
+        disabled={!enabled}
+        onChange={(event) => onChange(event.target.checked)}
+        className="size-4 accent-[var(--accent)] disabled:cursor-not-allowed"
+      />
+      <span>
+        {enabled ? (
+          <>
+            Show as <span className="tabular font-medium text-ink">{figure}+</span>
+          </>
+        ) : (
+          "Show as “at least”"
+        )}
+      </span>
+    </label>
   );
 }
 

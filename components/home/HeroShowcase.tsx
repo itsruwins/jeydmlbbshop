@@ -213,7 +213,7 @@ export function HeroShowcase({
                 <SparkIcon />
                 <span className="text-ink-3">
                   <span className="tabular font-medium text-ink">
-                    {formatCount(account.skin_count)}
+                    {formatCount(account.skin_count, account.skin_count_is_min)}
                   </span>{" "}
                   skins
                 </span>
@@ -224,7 +224,7 @@ export function HeroShowcase({
                   <HeroIcon />
                   <span className="text-ink-3">
                     <span className="tabular font-medium text-ink">
-                      {formatCount(account.hero_count)}
+                      {formatCount(account.hero_count, account.hero_count_is_min)}
                     </span>{" "}
                     heroes
                   </span>

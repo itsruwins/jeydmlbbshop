@@ -66,7 +66,15 @@ export type Account = {
   server: string | null;
   account_level: number | null;
   hero_count: number | null;
+  /**
+   * Whether `hero_count` is a floor rather than an exact figure — `100` with
+   * this set renders as "100+". Always false when the count is null; the
+   * database enforces the pair.
+   */
+  hero_count_is_min: boolean;
   skin_count: number | null;
+  /** The same, for `skin_count`. */
+  skin_count_is_min: boolean;
   description: string | null;
   status: AccountStatus;
   is_featured: boolean;

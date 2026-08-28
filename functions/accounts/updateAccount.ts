@@ -55,8 +55,14 @@ export async function updateAccount(
       rank_id: parsed.data.rank_id,
       collection_level_id: parsed.data.collection_level_id,
       server: parsed.data.server,
+      // Each count and its "at least" flag are written as a pair, for the
+      // same reason the installment columns are: the schema has already
+      // cleared a flag left on an empty count, so the two cannot reach the
+      // database contradicting the CHECK constraint that guards them.
       hero_count: parsed.data.hero_count,
+      hero_count_is_min: parsed.data.hero_count_is_min,
       skin_count: parsed.data.skin_count,
+      skin_count_is_min: parsed.data.skin_count_is_min,
       status: parsed.data.status,
       // Only an available listing can be featured. Enforced here as well as in
       // updateAccountStatus, because the form can change the status too and the

@@ -181,14 +181,18 @@ export default async function AccountDetailPage({
       icon: <SparkIcon />,
       label: "Skins",
       value:
-        account.skin_count === null ? null : formatCount(account.skin_count),
+        account.skin_count === null
+          ? null
+          : formatCount(account.skin_count, account.skin_count_is_min),
       numeric: true,
     },
     {
       icon: <HeroIcon />,
       label: "Heroes",
       value:
-        account.hero_count === null ? null : formatCount(account.hero_count),
+        account.hero_count === null
+          ? null
+          : formatCount(account.hero_count, account.hero_count_is_min),
       numeric: true,
     },
   ].filter((spec) => spec.value !== null);

@@ -35,7 +35,9 @@ reject bad input.
 | `server` | `text` | Free text. Holds the in-game ID and server together, e.g. `123456789 (2001)`; surfaced as "ID & Server" |
 | `account_level` | `integer` | Legacy. The admin form no longer collects one and no mutation writes the column |
 | `hero_count` | `integer` | |
+| `hero_count_is_min` | `boolean` | Renders the count as a floor: `100` becomes "100+". Added 28 Aug 2026 |
 | `skin_count` | `integer` | |
+| `skin_count_is_min` | `boolean` | The same, for skins. Added 28 Aug 2026 |
 | `description` | `text` | Legacy. No longer collected or written; the listing page no longer renders it |
 | `status` | `text` | `available` \| `reserved` \| `sold` \| `hidden` |
 | `is_featured` | `boolean` | |
@@ -73,6 +75,27 @@ ask `offersInstallment()` instead, which requires `status = 'available'`, so a
 sold listing never advertises terms nobody can take.
 
 Added by `supabase/changes/2026-08-27-installment.sql`.
+
+### Counts, and the "+"
+
+A seller with a few hundred heroes does not count them to the unit, and the
+market quotes what they do know — "100+", "500+". The columns hold that as two
+facts rather than one: the figure stays `integer`, and `hero_count_is_min` /
+`skin_count_is_min` say whether it is a floor. `formatCount` puts the `+` back
+on at render time.
+
+Widening the counts to `text` would have been the shorter change and the wrong
+one. `skin_count` is what the catalogue filters on (`.gte("skin_count", …)` in
+`getPublicAccounts.ts`), and `gte` over "500+" means nothing — where over a
+floor of 500 it still means exactly what it should.
+
+A CHECK per column refuses a flag set on a null count: with no figure to
+qualify it is a value nobody can see, and one that would turn into "0+" the day
+a zero was typed in front of it. `schemas/accountSchema.ts` clears the flag
+alongside the count so the constraint only ever catches a hand-edit, and the
+admin form disables the tickbox while the count is empty.
+
+Added by `supabase/changes/2026-08-28-count-at-least.sql`.
 
 Confirmed absent (they belong to the archived design, not this one):
 `reference`, `price_php`, `rank_slug`, `collection_slug`, `published_at`,

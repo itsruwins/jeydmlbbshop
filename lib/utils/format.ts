@@ -25,12 +25,23 @@ export function formatPrice(value: number | null | undefined): string {
   return PESO.format(value);
 }
 
-/** `1500` -> `1,500`. An em dash for absent values, never `0` or `null`. */
-export function formatCount(value: number | null | undefined): string {
+/**
+ * `1500` -> `1,500`. An em dash for absent values, never `0` or `null`.
+ *
+ * `isMin` is the "at least" case a seller quotes when they have not counted to
+ * the unit: `formatCount(100, true)` -> `100+`. It is stored beside the figure
+ * rather than baked into it (`accounts.hero_count_is_min`), so the number is
+ * still a number the catalogue can filter on.
+ */
+export function formatCount(
+  value: number | null | undefined,
+  isMin = false,
+): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
-  return COMPACT.format(value);
+  const figure = COMPACT.format(value);
+  return isMin ? `${figure}+` : figure;
 }
 
 export function formatDate(value: string | null | undefined): string {

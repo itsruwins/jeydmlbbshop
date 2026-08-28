@@ -20,6 +20,7 @@ missing feature. The order is: run the SQL, confirm it, then deploy.
 | --- | --- | --- |
 | `2026-08-26-social-link-kind.sql` | Adds `social_links.kind`, and inserts the TikTok and Instagram profiles as follow links | _not yet run_ |
 | `2026-08-27-installment.sql` | Adds `accounts.installment_available` and `accounts.installment_percents`, with the CHECK constraints that keep the pair honest | _not yet run_ |
+| `2026-08-28-count-at-least.sql` | Adds `accounts.hero_count_is_min` and `accounts.skin_count_is_min`, so a count can render as "100+" without the figure ceasing to be a number | _not yet run_ |
 
 Update the "Run on" column when you run one, and update `supabase/schema/`
 in the same commit so the documented schema still matches the live one.

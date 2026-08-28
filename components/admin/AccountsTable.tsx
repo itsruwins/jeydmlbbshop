@@ -73,7 +73,7 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
                 </Td>
 
                 <Td align="right" className="tabular text-ink-2">
-                  {formatCount(account.skin_count)}
+                  {formatCount(account.skin_count, account.skin_count_is_min)}
                 </Td>
 
                 <Td>
@@ -151,7 +151,10 @@ export function AccountsTable({ accounts }: { accounts: AccountWithRelations[] }
 
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[length:var(--text-sm)]">
               <Detail label="Rank" value={orDash(account.rank?.name)} />
-              <Detail label="Skins" value={formatCount(account.skin_count)} />
+              <Detail
+                label="Skins"
+                value={formatCount(account.skin_count, account.skin_count_is_min)}
+              />
               <Detail
                 label="Collection"
                 value={orDash(account.collection_level?.name)}
