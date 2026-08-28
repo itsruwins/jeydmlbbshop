@@ -8,6 +8,12 @@ import { cn } from "@/lib/utils/cn";
 import { imagePublicUrl } from "@/lib/utils/imagePublicUrl";
 import type { AccountImage } from "@/types/accountImage";
 
+/**
+ * The most slides the touch readout will draw as dots before it switches to a
+ * figure. See the readout itself for why the line is here.
+ */
+const DOTS_MAX = 6;
+
 /** A chevron at the site's stroke weight — see `specIcons` for the same hand. */
 function Chevron({ direction }: { direction: "prev" | "next" }) {
   return (
@@ -41,12 +47,12 @@ function Chevron({ direction }: { direction: "prev" | "next" }) {
  *
  * ## The controls are split by input, not by breakpoint
  *
- * Arrows on `hover: hover`, dots on everything else. A pointer that can hover
- * gets buttons that stay out of the artwork until the pointer is over it; a
- * thumb, which cannot hover and does not need a button because it can swipe,
- * gets a position readout instead and nothing to press. Keyed off the pointer
- * rather than the viewport width, because a small laptop window is still a
- * mouse and a large tablet is still a thumb.
+ * Arrows on `hover: hover`, a position readout on everything else. A pointer
+ * that can hover gets buttons that stay out of the artwork until the pointer
+ * is over it; a thumb, which cannot hover and does not need a button because
+ * it can swipe, gets the readout instead and nothing to press. Keyed off the
+ * pointer rather than the viewport width, because a small laptop window is
+ * still a mouse and a large tablet is still a thumb.
  *
  * ## Each slide is a link
  *
@@ -220,21 +226,46 @@ export function ScreenshotCarousel({
               the 44px a thumb needs, and spacing them out enough to hit would
               put a row of buttons across the artwork to do a job the swipe
               already does better. Marked `aria-hidden` because the position it
-              reports is already in every slide's label ("screenshot 2 of 4"). */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5 rounded-full bg-[oklch(0_0_0/0.45)] px-2 py-1.5 backdrop-blur-sm [@media(hover:hover)]:hidden"
-          >
-            {images.map((image, i) => (
-              <span
-                key={image.id}
-                className={cn(
-                  "size-1.5 rounded-full transition-colors duration-[var(--dur-fast)]",
-                  i === index ? "bg-[oklch(1_0_0)]" : "bg-[oklch(1_0_0/0.4)]",
-                )}
-              />
-            ))}
-          </div>
+              reports is already in every slide's label ("screenshot 2 of 4").
+
+              Dots only while they are still countable. A row of them costs
+              12px a slide, so a listing with two dozen screenshots — which is
+              an ordinary listing here, the seller shoots the whole collection
+              — draws a bar the width of the artwork and straight through the
+              price tag. Even given the room it would not read: past about six,
+              nobody counts a row of dots to find out they are on the fourth of
+              twenty-three, they just see a stripe. So the long strips get the
+              figure instead, in the lightbox's chip, which is the same readout
+              this carousel's own full-screen view already shows.
+
+              Six is where the swap happens: a phone card can hold more than
+              that, but the dots stop being a position and start being
+              decoration well before they stop fitting. */}
+          {count <= DOTS_MAX ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5 rounded-full bg-[oklch(0_0_0/0.45)] px-2 py-1.5 backdrop-blur-sm [@media(hover:hover)]:hidden"
+            >
+              {images.map((image, i) => (
+                <span
+                  key={image.id}
+                  className={cn(
+                    "size-1.5 rounded-full transition-colors duration-[var(--dur-fast)]",
+                    i === index ? "bg-[oklch(1_0_0)]" : "bg-[oklch(1_0_0/0.4)]",
+                  )}
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              aria-hidden="true"
+              className="tabular pointer-events-none absolute bottom-2.5 right-2.5 z-20 rounded-full bg-[oklch(0_0_0/0.45)] px-2 py-1 text-[length:var(--text-xs)] font-medium leading-[1.4] text-[oklch(1_0_0)] backdrop-blur-sm [@media(hover:hover)]:hidden"
+            >
+              {index + 1}
+              <span className="opacity-55">{" / "}</span>
+              {count}
+            </div>
+          )}
         </>
       )}
     </div>
